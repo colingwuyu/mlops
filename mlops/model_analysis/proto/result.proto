@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package mlops_model_analysis;
+
+import "mlops/model_analysis/proto/config.proto";
+
+message DataFrame {
+    repeated string columns = 1;
+    repeated string index = 2;
+    repeated double values = 3;
+}
+
+message MetricResult {
+    oneof result_oneof {
+        double value = 2;    
+        DataFrame report = 3;
+        string url = 4;
+    }
+}
+
+message EvalResult {
+    string eval_date = 2;
+    ModelSpec model_spec = 1;
+    map<string, MetricResult> metric_results = 3;
+}

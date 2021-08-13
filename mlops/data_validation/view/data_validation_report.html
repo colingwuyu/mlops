@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Data Validation Report</title>
+</head>
+
+<body>
+    <h1>Data Skew Anomaly Report</h1>
+    {{ skew_anomaly }}
+
+    <h1>Data Drift Anomaly Report</h1>
+    {{ drift_anomaly }}
+
+    <h1>Data Statistics</h1>
+    {% for stat_plot in stat_plots %}
+    <h2>{{ stat_plot[0] }}</h2>
+    {{ stat_plot[1] }}
+    {% endfor %}
+
+</body>
+
+</html>

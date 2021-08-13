@@ -1,0 +1,225 @@
+version: "3"
+
+x-airflow-common:
+  &airflow-common
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.1.2-python3.7}
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://mlops:mlops@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://mlops:mlops@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
+    AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./examples/iris/serving/static/data/airflow_comm:/opt/airflow/comm
+    - "/var/run/docker.sock:/var/run/docker.sock" 
+  # user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+  user: root
+  depends_on:
+    redis:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+
+services:
+  iris_serving:
+    image: mlops-base:latest
+    # command: ["gunicorn", "--bind", "0.0.0.0:3000", "app:app"]
+    command: ["python", "app.py"]
+    working_dir: "/app/examples/iris/serving"
+    volumes: 
+      # - ./examples/iris/serving:/app/examples/iris/serving
+      - .:/app
+      - mlflow_artifacts:/home/jovyan/mlflow_artifacts
+    restart: always
+    ports: 
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/model_ver"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    environment: 
+      FLASK_DEBUG: 1
+      FLASK_APP: ./app.py
+      IRIS_ENV: "docker"
+    depends_on: 
+      mlflow_server:
+        condition: service_healthy
+  
+  iris_monitoring:
+    image: mlops-base:latest
+    # command: ["gunicorn", "--bind", "0.0.0.0:3000", "app:app"]
+    command: ["python","-u", "monitoring.py"]
+    working_dir: "/app/examples/iris/serving"
+    volumes: 
+      # - ./examples/iris/serving:/app/examples/iris/serving
+      - .:/app
+      - mlflow_artifacts:/home/jovyan/mlflow_artifacts
+    restart: always
+    environment: 
+      IRIS_ENV: "docker"
+    depends_on: 
+      iris_serving:
+        condition: service_healthy
+          
+  notebook:
+    image: mlops-base:latest
+    command: ["start-notebook.sh", 
+              "--NotebookApp.password='sha1:cef53d37bd74:b88f52ef2a6bd19592b222dd306ad33894646f42'",
+              "--NotebookApp.notebook_dir='/app'"]
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - notebooks:/app/sandbox
+      - mlflow_artifacts:/home/jovyan/mlflow_artifacts
+    depends_on: 
+      mlflow_server:
+        condition: service_healthy
+    environment: 
+      MLFLOW_TRACKING_URI: 'http://mlflow_server:5000'
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870"
+      JUPYTER_ENABLE_LAB: 'yes'
+      IRIS_ENV: "docker"
+
+  mlflow_server:
+    image: mlops-base:latest
+    command: ["mlflow", "server", 
+              "--backend-store-uri", "postgresql://mlops:mlops@postgres:5432/mlflow", 
+              "--default-artifact-root", "/home/jovyan/mlflow_artifacts", 
+              "--host", "0.0.0.0"]
+    expose:
+      - "5000"
+    ports:
+      - "5000:5000"
+    depends_on: 
+      postgres: 
+        condition: service_healthy
+    volumes:
+      - mlflow_artifacts:/home/jovyan/mlflow_artifacts
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5000"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    
+  # docker_registry:
+  #   image: registry:2.6.2
+  #   volumes:
+  #     - registry-data:/var/lib/registry
+  #   restart: always
+
+  # docker_registry_ui:
+  #   image: joxit/docker-registry-ui:static
+  #   ports:
+  #     - 8000:80
+  #   environment:
+  #     - REGISTRY_TITLE=My Private Docker Registry
+  #     - REGISTRY_URL=http://docker_registry:5000
+  #   depends_on:
+  #     - docker_registry
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 50
+    restart: always
+
+  postgres:
+    image: mlops-postgres
+    restart: always
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    environment: 
+      POSTGRES_MULTIPLE_DATABASES: airflow,mlflow
+      POSTGRES_USER: mlops
+      POSTGRES_PASSWORD: mlops
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "mlops"]
+      interval: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+
+  flower:
+    <<: *airflow-common
+    command: celery flower
+    ports:
+      - 5555:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-init:
+    <<: *airflow-common
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_UPGRADE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+volumes:
+  postgres-db-volume:
+  notebooks:
+  mlflow_artifacts:
+  registry-data:
+    
+networks:
+  default:
+    external: 
+      name: mlops-bridge

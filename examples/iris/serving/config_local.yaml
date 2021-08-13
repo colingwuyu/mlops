@@ -1,0 +1,61 @@
+data_path:
+  data_store: "./static/data/"
+  inbound: "inbound"
+  outbound: "outbound"
+  label_data: "label_data"
+  upload_data: "upload_data"
+format:
+  date: "yyyymmdd"
+model:
+  name: examples.iris
+  ct_pipeline:
+    components:
+      data_gen:
+        url: "http://localhost:3000/data"
+        x_headers:
+          - sepal-length
+          - sepal-width
+          - petal-length
+          - petal-width
+        y_header: species
+        test_size: 0.2
+      data_validation:
+      feature_transform:
+        transform_approach: min-max
+      logistic_regression:
+      linear_discriminant_analysis:
+      model_eval:
+      model_pub:
+        model_registry_name: IRIS
+    dag: # component: downstream components separated by ','
+      data_gen:
+        - data_validation
+        - feature_transform
+        - logistic_regression
+        - linear_discriminant_analysis
+        - model_eval
+        - model_pub
+      data_validation:
+        - logistic_regression
+        - linear_discriminant_analysis
+      feature_transform:
+        - logistic_regression
+        - linear_discriminant_analysis
+      logistic_regression:
+        - model_eval
+      linear_discriminant_analysis:
+        - model_eval
+      model_eval:
+        - model_pub
+serving:
+  model_name: IRIS
+data_monitoring:
+  data_counter_file: "data_val_counter"
+  count_frequency: 200
+performance_monitoring:
+  perf_counter_file: "perf_eval_counter"
+  count_frequency: 1000
+mlflow:
+  exp_id: "Default"
+  tracking_uri: http://localhost:5000
+  registry_uri: http://localhost:5000

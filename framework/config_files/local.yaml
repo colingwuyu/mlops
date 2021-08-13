@@ -1,0 +1,7 @@
+env: "dev"
+log:
+  log_dir: "~/app/mlops/logs"
+spark:
+  app_name: ML_Ops
+  custom_config:
+    spark_driver_memory: "4g"

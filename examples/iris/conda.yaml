@@ -1,0 +1,11 @@
+channels:
+  - defaults
+dependencies:
+  - python=3.7.10
+  - pip
+  - pip:
+      - mlflow
+      - sklearn==0.24.2
+      - cloudpickle==1.6.0
+      - tensorflow_data_validation==1.1.0
+name: IRIS_env

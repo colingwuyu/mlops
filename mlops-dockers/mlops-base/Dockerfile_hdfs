@@ -1,0 +1,110 @@
+ARG JUP=jupyter
+ARG BASE_CONTAINER=$JUP/base-notebook
+
+FROM $BASE_CONTAINER
+
+ARG conda_env=python37
+ARG py_ver=3.7
+
+LABEL maintainer="Colin Wang <colingwuyu@gmail.com>"
+
+RUN conda create --quiet --yes \ 
+    -p "${CONDA_DIR}/envs/${conda_env}" \
+    python=${py_ver} ipython ipykernel && \
+    conda clean --all -f -y
+
+RUN "${CONDA_DIR}/envs/${conda_env}/bin/python" -m ipykernel install --user --name="${conda_env}"
+
+RUN mamba install --quiet --yes -p "${CONDA_DIR}/envs/${conda_env}" \
+    'mlflow=1.18.0' \
+    'pyarrow=3.0.0' \
+    'psycopg2' && \
+    mamba clean --all -f -y && \
+    fix-permissions "${CONDA_DIR}" && \
+    fix-permissions "/home/${NB_USER}"
+
+ENV PATH "${CONDA_DIR}/envs/${conda_env}/bin:${PATH}"
+ENV CONDA_DEFAULT_ENV ${conda_env}
+
+EXPOSE 5000
+
+WORKDIR "/home/${NB_USER}"
+COPY . "/home/${NB_USER}"
+
+USER root
+RUN chmod +x wait-for-it.sh
+
+USER ${NB_USER}
+
+# Hadoop client
+# install openJDK 1.8
+USER root
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y --no-install-recommends \
+    openjdk-8-jdk \
+    curl \
+    gnupg \ 
+    net-tools \
+    netcat \
+    libsnappy-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup env
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
+
+RUN curl -O https://dist.apache.org/repos/dist/release/hadoop/common/KEYS
+
+RUN gpg --import KEYS
+
+ENV HADOOP_VERSION=3.2.1
+ENV HADOOP_URL=https://archive.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
+ENV HADOOP_USER=${NB_USER}
+
+# download hadoop
+RUN set -x \
+    && curl -fSL "$HADOOP_URL" -o /tmp/hadoop.tar.gz \
+    && curl -fSL "$HADOOP_URL.asc" -o /tmp/hadoop.tar.gz.asc \
+    && gpg --verify /tmp/hadoop.tar.gz.asc \
+    && tar -xvf /tmp/hadoop.tar.gz -C /opt/ \
+    && rm /tmp/hadoop.tar.gz* \
+    && ln -s /opt/hadoop-${HADOOP_VERSION}/etc/hadoop /etc/hadoop \
+    && groupadd -r hadoop \
+    && groupadd -r $HADOOP_USER && usermod -a -g $HADOOP_USER -G hadoop $HADOOP_USER
+
+ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
+ENV HADOOP_CONF_DIR=/etc/hadoop
+ENV MULTIHOMED_NETWORK=1
+
+RUN mkdir /opt/hadoop-$HADOOP_VERSION/logs
+
+RUN mkdir -p $HADOOP_CONF_DIR
+
+RUN mkdir /hadoop-data
+
+# Setup permissions and ownership (httpfs tomcat conf for 600 permissions)
+RUN chown -R $HADOOP_USER:hadoop /opt/hadoop-${HADOOP_VERSION} && chmod -R 775 $HADOOP_CONF_DIR
+
+# set up hadoop user and bin path
+ENV HADOOP_USER_NAME $HADOOP_USER
+ENV PATH="${HADOOP_HOME}/bin:${PATH}"
+
+ADD ./hadoop_config.sh /hadoop_config.sh
+
+RUN chmod a+x /hadoop_config.sh
+
+ENV HDFS_CONF_dfs_datanode_data_dir=file:///hadoop/dfs/data
+RUN mkdir -p /hadoop/dfs/data
+VOLUME /hadoop/dfs/data
+
+ADD datanode_run.sh /datanode_run.sh
+RUN chmod a+x /datanode_run.sh
+
+EXPOSE 9864
+
+USER ${NB_USER}
+
+RUN fix-permissions "/hadoop/dfs/data"
+
+ENTRYPOINT ["tini", "-g", "--", "/hadoop_config.sh", "--"] 
+

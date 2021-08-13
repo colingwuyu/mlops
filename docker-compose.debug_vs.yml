@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  mlops:
+    image: mlops
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    command: ["sh", "-c", "pip install debugpy -t /tmp && python /tmp/debugpy --wait-for-client --listen 0.0.0.0:5678 -m flask run --no-debugger --no-reload --host 0.0.0.0 --port 3000"]
+    ports:
+      - 3000:3000
+      - 5678:5678
+    environment:
+      - FLASK_APP=examples/iris/serving/app.py

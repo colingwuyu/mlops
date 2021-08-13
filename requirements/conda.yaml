@@ -1,0 +1,18 @@
+channels:
+  - defaults
+
+dependencies:
+  - pip
+  - matplotlib
+  - networkx
+  - seaborn
+  - pip:
+      - mlflow==1.18.0
+      - sciekit-learn==0.24.2
+      - cloudpickle==1.6.0
+      - tensorflow==2.5.0
+      - tensorflow-data-validation=1.1.0
+      - tensorflow-model-analysis=0.32.0
+      - numpy==1.19.1
+      - pyarrow==2.0.0
+      - psycopg2
