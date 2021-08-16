@@ -13,7 +13,6 @@ def retrain():
     pipeline = Pipeline(
         pipeline_name=conf.settings.model.name,
         pipeline_def=conf.settings.model.ct_pipeline,
-        training_mode=True,
         mlflow_conf=conf.settings.mlflow,
     )
     LocalDagRunner().run(pipeline)

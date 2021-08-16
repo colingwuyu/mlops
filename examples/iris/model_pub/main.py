@@ -18,7 +18,7 @@ def main():
             upstream_ids.update({run_name: run_id})
     return run_func(
         upstream_ids=upstream_ids,
-        pipeline_info=datatype.PipelineInfo(
+        mlflow_info=datatype.MLFlowInfo(
             name="IRIS Training Pipeline",
             mlflow_tracking_uri="http://mlflow_server:5000",
             mlflow_registry_uri="http://mlflow_server:5000",

@@ -8,7 +8,7 @@ def main():
         y_header="species",
         test_size=0.2,
         url="http://iris_serving:3000/data",
-        pipeline_info=datatype.PipelineInfo(
+        mlflow_info=datatype.MLFlowInfo(
             name="IRIS Training Pipeline",
             mlflow_tracking_uri="http://mlflow_server:5000",
             mlflow_registry_uri="http://mlflow_server:5000",

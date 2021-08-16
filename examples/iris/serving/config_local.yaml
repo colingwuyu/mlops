@@ -7,26 +7,37 @@ data_path:
 format:
   date: "yyyymmdd"
 model:
-  name: examples.iris
+  name: "IRIS Training Pipeline"
+  root: /home/colin/projects/docker_projects/mlops/examples/iris
   ct_pipeline:
     components:
       data_gen:
-        url: "http://localhost:3000/data"
-        x_headers:
-          - sepal-length
-          - sepal-width
-          - petal-length
-          - petal-width
-        y_header: species
-        test_size: 0.2
+        module_file: data_gen/__init__.py
+        args:
+          url: "http://localhost:3000/data"
+          x_headers:
+            - sepal-length
+            - sepal-width
+            - petal-length
+            - petal-width
+          y_header: species
+          test_size: 0.2
       data_validation:
+        module_file: data_validation/__init__.py
       feature_transform:
-        transform_approach: min-max
+        module_file: feature_transform/__init__.py
+        args:
+          transform_approach: min-max
       logistic_regression:
+        module_file: logistic_regression/__init__.py
       linear_discriminant_analysis:
+        module_file: linear_discriminant_analysis/__init__.py
       model_eval:
+        module_file: model_eval/__init__.py
       model_pub:
-        model_registry_name: IRIS
+        module_file: model_pub/__init__.py
+        args:
+          model_registry_name: IRIS
     dag: # component: downstream components separated by ','
       data_gen:
         - data_validation

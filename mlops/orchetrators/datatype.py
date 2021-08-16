@@ -16,23 +16,25 @@ class ComponentSpec(object):
 
     def __init__(
         self,
+        name: str,
         args: dict = {},
-        component_module: str = None,
+        module_file: str = None,
         run_id: str = None,
         upstreams: List[str] = None,
     ):
+        self.name = name
         self.args = args
-        self.component_module = component_module
+        self.module_file = module_file
         self.run_id = run_id
         self.upstreams = upstreams
 
     def __repr__(self) -> str:
         short_args = deepcopy(self.args)
-        short_args.pop("pipeline_info")
-        return f"ComponentSpec(\n\tcomponent_module: {self.component_module}\n\trun_id: {self.run_id}\n\targs:\n{pad_tab(pretty_dict(short_args))}\n\tupstreams: {self.upstreams}\n)"
+        short_args.pop("mlflow_info")
+        return f"ComponentSpec(\n\tname: {self.name}\n\tmodule_file: {self.module_file}\n\trun_id: {self.run_id}\n\targs:\n{pad_tab(pretty_dict(short_args))}\n\tupstreams: {self.upstreams}\n)"
 
 
-class PipelineInfo(object):
+class MLFlowInfo(object):
     """PipelineInfo contains information of pipeline
 
     Attributes:

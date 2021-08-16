@@ -85,7 +85,6 @@ class Pipeline:
             pipeline_def = convert_to_namedtuple(mlflow_conf)
         # build component operators
         for component_name, component_val in pipeline_def.components._asdict().items():
-            component_val = component_val._asdict()
             module_file = os.path.join(
                 pipeline_module_root, component_val.get("module_file")
             )
