@@ -1,11 +1,10 @@
-import os
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.autograd import Variable
 
-import mlflow
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-
-from mlops.estimator.skestimator import SkEstimator
-from mlops.components import model_training_component
-from mlops.serving import model as mlops_model
+from mlops.types import ModelInput, ModelOutput
+from mlops.components import base_component
 from mlops.serving.model import (
     MODEL_COMP_SCALER,
     MODEL_COMP_SCHEMA,
@@ -22,32 +21,38 @@ from examples.iris.feature_transform import (
     OPS_NAME as FEATURE_TRANSFORM_OPS_NAME,
 )
 
-OPS_NAME = "linear_discriminant_analysis"
+OPS_NAME = "mlp_multiclass"
 OPS_DES = """
-# Linear Discriminant Analysis
-This is LDA model training operation.
-## Task type
-- classification
-## Upstream dependencies
-- Data Gen
-- Data Validation
-- Feature Transformation
-## Parameter
-None
-## Metrics
-- test_accuracy_score
-## Artifacts
-1. mlops_model: Mlflow Model 
-## Helper functions
-- `load_model(run_id: str)`
+# MLP Multi-Classification
 """
 
-LEARNING_FRAMEWORK = "sklearn"
-METRIC_TEST_ACCURACY = "test_accuracy_score"
-ARTIFACT_MODEL = "mlops_model"
+
+class MlpClassifier(nn.Module):
+    def __init__(
+        self,
+        num_features,
+        num_hidden_layers,
+        num_nerons,
+        num_classes,
+    ):
+        super(MlpClassifier, self).__init__()
+        self.fc_layers = [nn.Linear(num_features, num_nerons)]
+        for _ in range(1, num_hidden_layers):
+            self.fc_layers.append(nn.Linear(num_nerons, num_nerons))
+        self.fc_layers.append(nn.Linear(num_nerons, num_classes))
+
+    def forward(self, X):
+        for fc_layer in self.fc_layers:
+            X = F.relu(fc_layer(X))
+        return X
+
+    def predict(
+        self, data: ModelInput, predict_keys=None, **predict_params
+    ) -> ModelOutput:
+        input = torch.tensor(data.values)
 
 
-@model_training_component(name=OPS_NAME, note=OPS_DES, framework=LEARNING_FRAMEWORK)
+@base_component(name=OPS_NAME, note=OPS_DES)
 def run_func(upstream_ids: dict, **kwargs):
     model_comps = {}
 
@@ -67,15 +72,3 @@ def run_func(upstream_ids: dict, **kwargs):
 
     X_train = feature_scaler.transform(X_train)
     X_test = feature_scaler.transform(X_test)
-
-    lda = LinearDiscriminantAnalysis()
-    clf = lda.fit(X_train, y_train)
-    model_comps[MODEL_COMP_MODEL] = SkEstimator(clf)
-
-    mean_acc = clf.score(X_test, y_test)
-    mlflow.log_metric(METRIC_TEST_ACCURACY, mean_acc)
-
-    conda_file = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "../conda.yaml"
-    )
-    mlops_model.log_model(ARTIFACT_MODEL, model_comps, conda_env=conda_file)

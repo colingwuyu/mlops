@@ -7,7 +7,7 @@ import pandas as pd
 import mlflow
 from sklearn.model_selection import train_test_split
 
-from mlops.components import pipeline_init_component
+from mlops.components import base_component
 
 
 logger = logging.getLogger("IRIS")
@@ -52,7 +52,7 @@ ARTIFACT_TEST_X = "test_X.csv"
 ARTIFACT_TEST_Y = "test_y.csv"
 
 
-@pipeline_init_component(name=OPS_NAME, note=OPS_DES)
+@base_component(name=OPS_NAME, note=OPS_DES)
 def run_func(**kwargs):
     # Load parameters
     url = kwargs[PARAM_URL]

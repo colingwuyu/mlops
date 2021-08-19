@@ -44,7 +44,7 @@ COPY mlops-dockers/mlops-base/wait-for-it.sh "/home/${NB_USER}/"
 USER root
 RUN chmod a+x wait-for-it.sh
 
-RUN mkdir -p /app
+RUN mkdir -p /app/pipeline_config
 COPY . /app
 RUN chown -R ${NB_USER} /app
 

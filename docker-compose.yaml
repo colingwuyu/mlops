@@ -2,7 +2,7 @@ version: "3"
 
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.1.2-python3.7}
+  image: mlops-airflow:latest
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -17,6 +17,7 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
   volumes:
     - ./airflow/dags:/opt/airflow/dags
+    - pipeline_config:/opt/airflow/dags/pipeline_config
     - ./airflow/logs:/opt/airflow/logs
     - ./airflow/plugins:/opt/airflow/plugins
     - ./examples/iris/serving/static/data/airflow_comm:/opt/airflow/comm
@@ -81,6 +82,7 @@ services:
     volumes:
       - .:/app
       - notebooks:/app/sandbox
+      - pipeline_config:/app/pipeline_config
       - mlflow_artifacts:/home/jovyan/mlflow_artifacts
     depends_on: 
       mlflow_server:
@@ -218,6 +220,7 @@ volumes:
   notebooks:
   mlflow_artifacts:
   registry-data:
+  pipeline_config:
     
 networks:
   default:

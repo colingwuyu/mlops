@@ -1,7 +1,7 @@
 import mlflow
 
 from mlops.components.base_component import base_component
-from mlops.orchetrators.datatype import MLFlowInfo
+from mlops.orchestrators.datatype import MLFlowInfo
 from mlops.utils.mlflowutils import MlflowUtils
 
 
@@ -14,7 +14,7 @@ def pipeline_init_component(name: str = None, note: str = None):
             )
             mlflow_info: MLFlowInfo = kwargs["mlflow_info"]
             MlflowUtils.init_mlflow_client(
-                mlflow_info.mlflow_tracking_uri, mlflow_info.model_registry_uri
+                mlflow_info.mlflow_tracking_uri, mlflow_info.mlflow_registry_uri
             )
             pipelinne_mlflow_run = mlflow.start_run(
                 experiment_id=MlflowUtils.get_exp_id(mlflow_info.mlflow_exp_id),

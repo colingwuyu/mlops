@@ -23,6 +23,6 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
-**/airflow
+airflow/*
 **/k8sdeploy
 README.md

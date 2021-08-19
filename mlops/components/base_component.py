@@ -1,6 +1,6 @@
 import mlflow
 
-from mlops.orchetrators.datatype import MLFlowInfo
+from mlops.orchestrators.datatype import MLFlowInfo
 from mlops.utils.mlflowutils import MlflowUtils
 
 ARG_MLFLOW_RUN_ID = "mlflow_run"
@@ -25,14 +25,17 @@ def base_component(name: str = None, note: str = None):
             )
             mlflow_info: MLFlowInfo = kwargs["mlflow_info"]
             MlflowUtils.init_mlflow_client(
-                mlflow_info.mlflow_tracking_uri, mlflow_info.model_registry_uri
+                mlflow_info.mlflow_tracking_uri, mlflow_info.mlflow_registry_uri
             )
             if not mlflow.active_run():
                 mlflow.start_run(run_id=mlflow_info.mlflow_run_id)
+            else:
+                assert mlflow.active_run() == mlflow_info.mlflow_run_id
             with mlflow.start_run(
                 experiment_id=MlflowUtils.get_exp_id(mlflow_info.mlflow_exp_id),
                 run_name=name,
                 nested=True,
+                tags=mlflow_info.mlflow_tags,
             ) as active_run:
                 component_mlflow_run_id = active_run.info.run_id
                 if note:
@@ -60,7 +63,7 @@ def base_component(name: str = None, note: str = None):
                         mlflow.log_param(arg_name, arg_value)
                 kwargs.update({ARG_MLFLOW_RUN_ID: active_run})
                 run_func(*args, **kwargs)
-            return component_mlflow_run_id
+            return mlflow_info.mlflow_run_id, component_mlflow_run_id
 
         return inner_mlflow_wrapper
 

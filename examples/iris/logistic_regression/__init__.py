@@ -3,7 +3,6 @@ import os
 import mlflow
 from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
-from sklearn.pipeline import Pipeline
 
 from mlops.estimator.skestimator import SkEstimator
 from mlops.components import model_training_component

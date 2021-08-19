@@ -8,12 +8,12 @@ conf.load("config_{}.yaml".format(os.environ.get("IRIS_ENV", "local")))
 
 
 def retrain():
-    from mlops.orchetrators.pipeline import Pipeline
-    from mlops.orchetrators.local_dag_runner import LocalDagRunner
+    from mlops.orchestrators.pipeline import Pipeline
+    from mlops.orchestrators.local.local_dag_runner import LocalDagRunner
 
     pipeline = Pipeline(
-        pipeline_name=conf.settings.model.name,
-        pipeline_def=conf.settings.model.ct_pipeline,
+        name=conf.settings.model.name,
+        components=conf.settings.model.ct_pipeline,
         mlflow_conf=conf.settings.mlflow,
     )
     LocalDagRunner().run(pipeline)

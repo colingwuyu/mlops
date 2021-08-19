@@ -8,7 +8,7 @@ import networkx as nx
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from mlops.orchetrators import datatype
+from mlops.orchestrators import datatype
 from mlops.utils.collectionutils import convert_to_namedtuple
 from mlops.utils.strutils import pad_tab
 
@@ -85,7 +85,6 @@ class Pipeline:
             pipeline_def = convert_to_namedtuple(mlflow_conf)
         # build component operators
         for component_name, component_val in pipeline_def.components._asdict().items():
-            component_val = component_val._asdict()
             module_file = os.path.join(
                 pipeline_module_root, component_val.get("module_file")
             )
