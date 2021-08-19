@@ -30,7 +30,7 @@ def base_component(name: str = None, note: str = None):
             if not mlflow.active_run():
                 mlflow.start_run(run_id=mlflow_info.mlflow_run_id)
             else:
-                assert mlflow.active_run() == mlflow_info.mlflow_run_id
+                assert mlflow.active_run().info.run_id == mlflow_info.mlflow_run_id
             with mlflow.start_run(
                 experiment_id=MlflowUtils.get_exp_id(mlflow_info.mlflow_exp_id),
                 run_name=name,
