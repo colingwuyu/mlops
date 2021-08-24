@@ -49,10 +49,9 @@ class AirflowDagRunner:
         init_mlflow_task = PythonOperator(
             task_id="init_mlflow",
             python_callable=_exec_init_run,
+            op_args=[pipeline.get_pipeline_init_component_spec().args["mlflow_info"]],
             dag=airflow_dag,
-            default_args=pipeline.get_pipeline_init_component_spec().args[
-                "mlflow_info"
-            ],
+            default_args=self._config.airflow_dag_config["default_args"],
         )
         init_mlflow_task.set_upstream(start_pipeline_task)
         end_pipeline_task = PythonOperator(

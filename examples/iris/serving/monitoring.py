@@ -140,7 +140,7 @@ def performance_eval(start_row, end_row):
 
 
 if __name__ == "__main__":
-    print("start monitoring...")
+    print("Monitoring: start monitoring...")
     upload_data_counter = FileLineCounter(
         data_file=UPLOAD_DATA_FILE,
         inc_interval=conf.settings.data_monitoring.count_frequency,
@@ -154,11 +154,6 @@ if __name__ == "__main__":
         initial_point=150,
     )
 
-    if model is None:
-        print("Monitoring: load_model None...")
-    else:
-        response = requests.get(f"{IRIS_SERVING_URL}/reload_model")
-        print(response.text)
     while True:
         airflow_comm_status = AirflowCommStatus.status()
         if airflow_comm_status == AirflowCommStatus.DONE:
@@ -167,7 +162,9 @@ if __name__ == "__main__":
             print("Monitoring: waiting for model ready...")
             time.sleep(30)
             continue
-        if not model:
+        model = load_model("Production")
+        if model is None:
+            print("Monitoring: load_model None...")
             airflow_comm_status.transit()
             print("Monitoring: start training...")
             while AirflowCommStatus.status() != AirflowCommStatus.DONE:
@@ -176,8 +173,10 @@ if __name__ == "__main__":
             AirflowCommStatus.status().transit()
             print("Monitoring: training done...")
             model = load_model("Production")
+        response = requests.get(f"{IRIS_SERVING_URL}/model_ver")
+        if response.text == "Model is not loaded yet.":
             response = requests.get(f"{IRIS_SERVING_URL}/reload_model")
-            print(response.text)
+            print("Monitoring: " + response.text)
 
         require_retrain = False
 

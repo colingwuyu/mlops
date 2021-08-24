@@ -3,6 +3,7 @@ import json
 
 import mlflow
 from mlflow.tracking import MlflowClient
+from mlflow.tracking.artifact_utils import _download_artifact_from_uri
 
 from mlops.utils.sysutils import is_windows
 
@@ -33,8 +34,17 @@ class MlflowUtils:
         print("Lifecycle_stage: {}".format(experiment.lifecycle_stage))
 
     @classmethod
+    def get_mlflow_client(cls):
+        if cls.mlflow_client is None:
+            cls.init_mlflow_client(
+                os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:3000"),
+                os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:3000"),
+            )
+        return cls.mlflow_client
+
+    @classmethod
     def _get_run(cls, run_id: str):
-        return cls.mlflow_client.get_run(run_id)
+        return cls.get_mlflow_client().get_run(run_id)
 
     @classmethod
     def get_parameters(cls, run_id: str):
@@ -96,15 +106,15 @@ class MlflowUtils:
 
     @classmethod
     def add_run_note(cls, run_id: str, note: str):
-        cls.mlflow_client.set_tag(run_id, "mlflow.note.content", note)
+        cls.get_mlflow_client().set_tag(run_id, "mlflow.note.content", note)
 
     @classmethod
     def get_exp_id(cls, exp_name: str):
-        return cls.mlflow_client.get_experiment_by_name(exp_name).experiment_id
+        return cls.get_mlflow_client().get_experiment_by_name(exp_name).experiment_id
 
     @classmethod
     def get_run_name(cls, run_id: str):
-        run = MlflowUtils.mlflow_client.get_run(run_id=run_id)
+        run = MlflowUtils._get_run(run_id=run_id)
         return run.data.tags["mlflow.runName"]
 
     @classmethod
@@ -126,4 +136,4 @@ class MlflowUtils:
 
     @classmethod
     def get_latest_versions(cls, name, stages):
-        return cls.mlflow_client.get_latest_versions(name, stages)
+        return cls.get_mlflow_client().get_latest_versions(name, stages)

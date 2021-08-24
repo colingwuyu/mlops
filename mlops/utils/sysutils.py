@@ -2,6 +2,7 @@ import platform
 import subprocess
 import os
 from sys import version_info
+import re
 
 
 PYTHON_VERSION = "{major}.{minor}.{micro}".format(
@@ -37,3 +38,9 @@ def path_splitall(path):
             path = parts[0]
             allparts.insert(0, parts[1])
     return allparts
+
+
+def parse_rul(url):
+    p = "(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*"
+    m = re.search(p, url)
+    return {"host": m.group("host"), "port": int(m.group("port"))}

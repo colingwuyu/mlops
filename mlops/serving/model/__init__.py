@@ -36,6 +36,7 @@ from tensorflow_data_validation.utils.display_util import get_anomalies_datafram
 import mlops.serving
 from mlops.types import RegPath, ModelPath, ModelComponents, ModelInput, ModelOutput
 import mlops.model_analysis as mlops_ma
+from mlops.estimator.loader import EstimatorLoader
 
 FLAVOR_NAME = "mlops_model"
 CODE = "code"
@@ -354,7 +355,9 @@ def _load_mlops_model(model_path: ModelPath):
 
 
 def _load_model_comp(model_comp_name, model_comp_path):
-    if model_comp_name in [MODEL_COMP_MODEL, MODEL_COMP_SCALER]:
+    if model_comp_name == MODEL_COMP_MODEL:
+        return EstimatorLoader.load(model_comp_path)
+    if model_comp_name == MODEL_COMP_SCALER:
         with open(model_comp_path, "rb") as f:
             return cloudpickle.load(f)
     if model_comp_name == MODEL_COMP_SCHEMA:
@@ -539,7 +542,7 @@ def save_model(
         model=mlflow_model,
         code=saved_code_subpath,
         env=conda_env_subpath,
-        **custom_model_config_kwargs
+        **custom_model_config_kwargs,
     )
     mlflow_model.save(os.path.join(path, MLMODEL_FILE_NAME))
 
@@ -549,10 +552,12 @@ def _save_model_comp(model_comp, model_comp_name, output_path: TempDir):
     :param sk_model: The scikit-learn model to serialize.
     :param output_path: The file path to which to write the serialized model.
     """
-    if model_comp_name in [MODEL_COMP_MODEL, MODEL_COMP_SCALER]:
+    if model_comp_name == MODEL_COMP_MODEL:
+        saved_path = model_comp.save(output_path.path())
+    elif model_comp_name == MODEL_COMP_SCALER:
         saved_path = os.path.join(output_path.path(), model_comp_name + ".pkl")
         with open(saved_path, "wb") as out:
-            pickle.dump(model_comp, out)
+            cloudpickle.dump(model_comp, out)
     elif model_comp_name in [
         MODEL_COMP_SCHEMA,
         MODEL_COMP_STATS,
@@ -568,7 +573,9 @@ def _save_model_comp(model_comp, model_comp_name, output_path: TempDir):
         elif not model_comp:
             saved_path = ""
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(
+            f"Model Component: {model_comp_name} is not implemented"
+        )
     return saved_path
 
 

@@ -74,7 +74,9 @@ def run_func(upstream_ids: dict, **kwargs):
 
     lr = LogisticRegression(multi_class="multinomial")
     clf = lr.fit(X_train, y_train)
-    model_comps[MODEL_COMP_MODEL] = SkEstimator(clf)
+    model_estimator = SkEstimator()
+    model_estimator.set_model(clf)
+    model_comps[MODEL_COMP_MODEL] = model_estimator
 
     mean_acc = clf.score(X_test, y_test)
     mlflow.log_metric(METRIC_TEST_ACCURACY, mean_acc)

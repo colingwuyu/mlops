@@ -5,3 +5,4 @@ airflow/*
 *.pkl
 *.png
 *.tgz
+.ipynb_checkpoints/

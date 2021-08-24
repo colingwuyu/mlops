@@ -1,25 +1,54 @@
-"""Wrap sklearn Pipeline"""
+from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import numpy as np
-import sklearn
+
 
 from mlops.utils.functionutils import call_func
 from mlops.types import ModelInput, ModelOutput
-import mlops.estimator.consts as consts
-
-# FUNC_PROBABILITIES = "predict_proba"
-# FUNC_CLASSES = "predict"
-# FUNC_CLASS_IDS = "class_ids"
-# FUNC_ALL_CLASS_IDS = "all_class_ids"
-# FUNC_ALL_CLASSES = "all_classes"
+from mlops.estimator import consts
 
 
-class SkEstimator(object):
-    def __init__(self, sklearn_estimator):
-        self._estimator = sklearn_estimator
-        self._estimator_type = sklearn_estimator._estimator_type
-        if sklearn.base.is_classifier(sklearn_estimator):
+class Estimator(ABC):
+    def __init__(self) -> None:
+        super().__init__()
+        self._estimator = None
+
+    @abstractmethod
+    def save(self, model_path):
+        pass
+
+    @abstractmethod
+    def load(self, model_path):
+        pass
+
+    def predict(
+        self, data: ModelInput, predict_keys=None, **predict_params
+    ) -> ModelOutput:
+        if not predict_keys:
+            predict_keys = self._prediction.keys()
+        predictions = {}
+        for predict_key in self._prediction.keys():
+            if predict_key not in predict_keys:
+                continue
+            pred_func = self._prediction[predict_key]
+            if hasattr(self._estimator, pred_func):
+                predictions[predict_key] = call_func(
+                    self._estimator, pred_func, data, predictions, **predict_params
+                )
+            else:
+                predictions[predict_key] = call_func(
+                    self, pred_func, data, predictions, **predict_params
+                )
+        for predict_key in predictions:
+            if predict_key not in predict_keys:
+                predictions.pop(predict_key)
+        return predictions
+
+    def set_model(self, model):
+        self._estimator = model
+        self._estimator_type = model._estimator_type
+        if self._estimator_type == "classifier":
             self._all_classes_mapping = OrderedDict()
             self._all_classes_one_hot = np.identity(len(self._estimator.classes_))
             for i, class_ in enumerate(self._estimator.classes_):
@@ -45,36 +74,8 @@ class SkEstimator(object):
                     (consts.PREDICTION_KEY_ALL_CLASSES_MAPPING, "all_classes_mapping"),
                 ]
             )
-        elif sklearn.base.is_regressor(sklearn_estimator):
+        elif self._estimator_type == "regressor":
             ...
-
-    @classmethod
-    def convert_to_estimator(cls, sklearn_estimator):
-        estimator = cls(sklearn_estimator)
-        return estimator
-
-    def predict(
-        self, data: ModelInput, predict_keys=None, **predict_params
-    ) -> ModelOutput:
-        if not predict_keys:
-            predict_keys = self._prediction.keys()
-        predictions = {}
-        for predict_key in self._prediction.keys():
-            if predict_key not in predict_keys:
-                continue
-            pred_func = self._prediction[predict_key]
-            if hasattr(self._estimator, pred_func):
-                predictions[predict_key] = call_func(
-                    self._estimator, pred_func, data, predictions, **predict_params
-                )
-            else:
-                predictions[predict_key] = call_func(
-                    self, pred_func, data, predictions, **predict_params
-                )
-        for predict_key in predictions:
-            if predict_key not in predict_keys:
-                predictions.pop(predict_key)
-        return predictions
 
     def all_class_ids(self):
         return self._all_class_ids
