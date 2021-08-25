@@ -23,6 +23,7 @@ class LocalDagRunner:
             run_name=mlflow_info.name,
         )
         mlflow_info.mlflow_run_id = pipelinne_mlflow_run.info.run_id
+        mlflow.end_run()
 
     def _exec_ops(self, ops_name: str, operators: dict):
         """execute the operation with specific module name
