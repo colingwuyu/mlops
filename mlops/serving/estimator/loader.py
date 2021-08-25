@@ -1,8 +1,8 @@
 from examples.iris.serving import model
 import pathlib
 
-from mlops.estimator.skestimator import SkEstimator
-from mlops.estimator.torchestimator import TorchEstimator
+from mlops.serving.estimator.skestimator import SkEstimator
+from mlops.serving.estimator.torchestimator import TorchEstimator
 
 
 class EstimatorLoader:

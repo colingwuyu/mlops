@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report
 import mlflow
 
 from mlops.types import ModelInput, ModelOutput
-from mlops.estimator.torchestimator import TorchModel
+from mlops.serving.estimator.torchestimator import TorchModel
 
 
 class MlpClassifierNet(nn.Module):

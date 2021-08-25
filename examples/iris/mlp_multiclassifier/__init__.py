@@ -13,7 +13,7 @@ from mlops.serving.model import (
     MODEL_COMP_STATS,
     MODEL_COMP_MODEL,
 )
-from mlops.estimator.torchestimator import TorchEstimator
+from mlops.serving.estimator.torchestimator import TorchEstimator
 from examples.iris.data_gen import helper as dg_helper, OPS_NAME as DATA_GEN_OPS_NAME
 from examples.iris.data_validation import (
     helper as dv_helper,

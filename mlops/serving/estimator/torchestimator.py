@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-from mlops import estimator
-from examples.iris.serving import model
 import os
 import inspect
 from typing import Dict
@@ -8,7 +6,7 @@ from typing import Dict
 import torch
 from importlib import import_module
 
-from mlops.estimator.estimator import Estimator
+from mlops.serving.estimator.estimator import Estimator
 from mlops.types import ModelInput, ModelOutput
 
 

@@ -8,8 +8,8 @@ import pickle
 
 from mlops.utils.functionutils import call_func
 from mlops.types import ModelInput, ModelOutput
-import mlops.estimator.consts as consts
-from mlops.estimator.estimator import Estimator
+import mlops.serving.estimator.consts as consts
+from mlops.serving.estimator.estimator import Estimator
 
 # FUNC_PROBABILITIES = "predict_proba"
 # FUNC_CLASSES = "predict"

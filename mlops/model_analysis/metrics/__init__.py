@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mlops.estimator import consts as estimator_consts
+from mlops.serving.estimator import consts as estimator_consts
 from mlops.model_analysis.proto import config_pb2
 
 MetricDisplayURL = Text

@@ -36,7 +36,7 @@ from tensorflow_data_validation.utils.display_util import get_anomalies_datafram
 import mlops.serving
 from mlops.types import RegPath, ModelPath, ModelComponents, ModelInput, ModelOutput
 import mlops.model_analysis as mlops_ma
-from mlops.estimator.loader import EstimatorLoader
+from mlops.serving.estimator.loader import EstimatorLoader
 
 FLAVOR_NAME = "mlops_model"
 CODE = "code"

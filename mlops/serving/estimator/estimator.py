@@ -6,7 +6,7 @@ import numpy as np
 
 from mlops.utils.functionutils import call_func
 from mlops.types import ModelInput, ModelOutput
-from mlops.estimator import consts
+from mlops.serving.estimator import consts
 
 
 class Estimator(ABC):
