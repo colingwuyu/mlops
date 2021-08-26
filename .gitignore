@@ -6,3 +6,9 @@ airflow/*
 *.png
 *.tgz
 .ipynb_checkpoints/
+examples/iris/serving/static/*
+examples/iris/serving/templates/*
+.vscode/
+*.egg-info/
+dist/
+build/
