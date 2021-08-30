@@ -19,10 +19,6 @@ def base_component(name: str = None, note: str = None):
 
     def inner_base_component(run_func):
         def inner_mlflow_wrapper(*args, **kwargs):
-            assert (
-                "mlflow_info" in kwargs.keys(),
-                "ERROR: argument 'pipeline' is required for a base_component.",
-            )
             mlflow_info: MLFlowInfo = kwargs["mlflow_info"]
             MlflowUtils.init_mlflow_client(
                 mlflow_info.mlflow_tracking_uri, mlflow_info.mlflow_registry_uri

@@ -4,7 +4,8 @@ from tensorboard import program, notebook
 
 from mlops.utils.mlflowutils import MlflowUtils
 from mlops.utils.sysutils import parse_rul
-from examples.iris.mlp_multiclassifier import ARTIFACT_TB, OPS_NAME
+from mlops.serving import model as mlops_model
+from examples.iris.mlp_multiclassifier import ARTIFACT_TB, OPS_NAME, ARTIFACT_MODEL
 
 
 TB_LOCAL_PATH = "./tb_logs"
@@ -31,3 +32,8 @@ def download_tb(run_id):
         os.makedirs(tb_save_path)
     MlflowUtils.download_artifact(run_id, ARTIFACT_TB, output_path=tb_save_path)
     return tb_save_path
+
+
+def load_model(run_id: str):
+    _assert_ops_type(run_id)
+    return mlops_model.load_model(f"runs:/{run_id}/{ARTIFACT_MODEL}")
