@@ -1,5 +1,6 @@
 import os
 import json
+import yaml
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -45,6 +46,10 @@ class MlflowUtils:
     @classmethod
     def _get_run(cls, run_id: str):
         return cls.get_mlflow_client().get_run(run_id)
+
+    @classmethod
+    def get_run_name(cls, run_id: str):
+        return cls._get_rund(run_id).data.tags["mlflow.runName"]
 
     @classmethod
     def get_parameters(cls, run_id: str):
@@ -97,11 +102,16 @@ class MlflowUtils:
 
     @classmethod
     def load_dict(cls, run_id: str, artifact_file: str):
+        sufix = artifact_file.split(".")[-1]
         assert (
-            artifact_file.split(".")[-1] == "json"
-        ), "MlflowUtils.load_dict expects artifact_file in json format with file extention '.json'."
+            (sufix == "json") or (sufix == "ymal") or (sufix == "yml")
+        ), "MlflowUtils.load_dict expects artifact_file in json/yaml format with file extention '.json'."
+
         with cls.ArtifactFileObj(run_id, artifact_file) as dict_f:
-            data = json.load(dict_f)
+            if sufix == "json":
+                data = json.load(dict_f)
+            else:
+                data = yaml.load(dict_f)
         return data
 
     @classmethod

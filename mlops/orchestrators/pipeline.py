@@ -1,9 +1,8 @@
 from collections import namedtuple
 import copy
-from mlops import components
-import os
 from typing import Union, Dict, Text
 
+import mlflow
 from mlflow.tracking.context.git_context import _get_git_commit
 from mlflow.projects.utils import (
     _fetch_project,
@@ -20,6 +19,10 @@ from mlflow.utils.mlflow_tags import (
 from mlops.orchestrators import datatype
 from mlops.utils.collectionutils import convert_to_namedtuple
 from mlops.utils.strutils import pad_tab
+from mlops.utils.mlflowutils import MlflowUtils
+
+
+ARTIFACT_PIPELINE = "pipeline.yml"
 
 
 class Pipeline:
@@ -84,21 +87,29 @@ class Pipeline:
         components: Union[dict, namedtuple],
         version: str = None,
         mlflow_conf: Union[dict, namedtuple] = None,
+        run_id: str = None,
     ):
+        if isinstance(components, dict):
+            components = convert_to_namedtuple(components)
+        if isinstance(mlflow_conf, dict):
+            mlflow_conf = convert_to_namedtuple(mlflow_conf)
+
         self.name = name
         self.operators: Dict[Text, datatype.ComponentSpec] = {}
+        self.uri = uri
+        self.version = version
 
         # fetch codes
-        workdir = _fetch_project(uri, version)
+        module_dir = _fetch_project(uri, version)
         mlflow_tags = {}
         if not _is_local_uri(uri):
-            source_version = _get_git_commit(workdir)
+            source_version = _get_git_commit(module_dir)
             if source_version is not None:
                 mlflow_tags[MLFLOW_GIT_COMMIT] = source_version
-            repo_url = _get_git_repo_url(workdir)
+            repo_url = _get_git_repo_url(module_dir)
             if repo_url is not None:
                 mlflow_tags[MLFLOW_GIT_REPO_URL] = repo_url
-            if _is_valid_branch_name(workdir, version):
+            if _is_valid_branch_name(module_dir, version):
                 mlflow_tags[MLFLOW_GIT_BRANCH] = version
 
         self.mlflow_info = datatype.MLFlowInfo(
@@ -108,10 +119,8 @@ class Pipeline:
             mlflow_exp_id=mlflow_conf.exp_id,
             mlflow_tags=mlflow_tags,
         )
-        if isinstance(components, dict):
-            components = convert_to_namedtuple(components)
-        if isinstance(mlflow_conf, dict):
-            mlflow_conf = convert_to_namedtuple(mlflow_conf)
+        if run_id:
+            self.mlflow_info.mlflow_run_id = run_id
         # build component operators
         for component_name, component_val in components._asdict().items():
             component_val = component_val._asdict()
@@ -120,11 +129,12 @@ class Pipeline:
                 copy.deepcopy(component_args._asdict()) if component_args else {}
             )
             cur_component_args["mlflow_info"] = self.mlflow_info
-
             cur_component_spec = datatype.ComponentSpec(
                 name=component_name,
                 args=cur_component_args,
-                module_file=os.path.join(workdir, component_val.get("module_file")),
+                module_dir=module_dir,
+                module_file=component_val.get("module_file"),
+                module=component_val.get("module"),
                 run_id=component_val.get("run_id"),
                 upstreams=component_val.get("upstreams", []),
                 pipeline_init=component_val.get("pipeline_init", False),
@@ -138,7 +148,7 @@ class Pipeline:
                 return component_spec
 
     @classmethod
-    def load(cls, pipeline: Union[dict, namedtuple]):
+    def load(cls, pipeline: Union[dict, namedtuple], run_id: str = None):
         if not isinstance(pipeline, dict):
             pipeline = pipeline._asdict()
         return cls(
@@ -147,6 +157,7 @@ class Pipeline:
             components=pipeline.get("components"),
             version=pipeline.get("version"),
             mlflow_conf=pipeline.get("mlflow"),
+            run_id=run_id,
         )
 
     def __repr__(self) -> str:
@@ -156,5 +167,36 @@ class Pipeline:
         str_operators += ")"
         return f"Pipeline(\n\tname: {self.name}\n\trun_id: {self.mlflow_info.mlflow_run_id}\n\toperators:\n{pad_tab(str_operators)})"
 
+    @property
     def run_ids(self):
         return {k: {"run_id": v.run_id} for k, v in self.operators.items()}
+
+    @property
+    def run_id(self):
+        return self.mlflow_info.mlflow_run_id
+
+    def _serialize(self):
+        pipeline_yml = dict()
+        pipeline_yml["name"] = self.name
+        pipeline_yml["uri"] = self.uri
+        if self.version:
+            pipeline_yml["version"] = self.version
+        components = dict()
+        for component_name, component_spec in self.operators.items():
+            component_val = component_spec._serialize()
+            components[component_name] = component_val
+        pipeline_yml["components"] = components
+        pipeline_yml["mlflow"] = self.mlflow_info._serialize()
+        return pipeline_yml
+
+    def log_mlflow(self):
+        MlflowUtils.mlflow_client.log_dict(
+            self.run_id, self._serialize(), ARTIFACT_PIPELINE
+        )
+
+    @classmethod
+    def view(cls, mlflow_info: datatype.MLFlowInfo) -> "Pipeline":
+        pipeline_dict = MlflowUtils.load_dict(
+            mlflow_info.mlflow_run_id, ARTIFACT_PIPELINE
+        )
+        return cls.load(pipeline_dict, run_id=mlflow_info.mlflow_run_id)

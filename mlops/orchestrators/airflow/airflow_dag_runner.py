@@ -1,12 +1,10 @@
 from typing import Any, Dict, Optional, Text, Union
+import yaml
 
 from airflow import models
 from airflow.operators.python import PythonOperator
-import mlflow
 
-from mlops.utils.mlflowutils import MlflowUtils
 from mlops.orchestrators import pipeline as pipeline_module
-from mlops.orchestrators import datatype
 from mlops.orchestrators.airflow import airflow_component, airflow_comm
 from mlops.orchestrators.airflow.airflow_component import (
     AIRFLOW__CELERY__BROKER_URL,
@@ -49,16 +47,23 @@ class AirflowDagRunner:
         init_mlflow_task = PythonOperator(
             task_id="init_mlflow",
             python_callable=_exec_init_run,
-            op_args=[pipeline.get_pipeline_init_component_spec().args["mlflow_info"]],
+            op_args=[pipeline],
             dag=airflow_dag,
             default_args=self._config.airflow_dag_config["default_args"],
         )
         init_mlflow_task.set_upstream(start_pipeline_task)
+        end_mlflow_task = PythonOperator(
+            task_id="end_mlflow",
+            python_callable=_exec_end_run,
+            dag=airflow_dag,
+            default_args=self._config.airflow_dag_config["default_args"],
+        )
         end_pipeline_task = PythonOperator(
             task_id="transit_airflow_comm_status_done",
             python_callable=_transit_status_done,
             default_args=self._config.airflow_dag_config["default_args"],
         )
+        end_pipeline_task.set_upstream(end_mlflow_task)
 
         component_impl_map = {}
         for component_name, component_spec in pipeline.operators.items():
@@ -92,7 +97,7 @@ class AirflowDagRunner:
                 current_airflow_component.set_upstream(init_mlflow_task)
 
             if component_spec.pipeline_end:
-                current_airflow_component.set_downstream(end_pipeline_task)
+                current_airflow_component.set_downstream(end_mlflow_task)
         return airflow_dag
 
 
@@ -106,22 +111,40 @@ def _transit_status_done():
     print(cur_status.transit())
 
 
-def _exec_init_run(mlflow_info: datatype.MLFlowInfo):
+def _exec_init_run(pipeline: pipeline_module.Pipeline):
+    import redis
+
+    r = redis.Redis.from_url(
+        AIRFLOW__CELERY__BROKER_URL[:-1], db=DOCKER_COMPONENT_REDIS_DB
+    )
+    print(pipeline)
+    pipeline.mlflow_info.init_mlflow_run()
+
+    r.hset("mlflow_runids", "pipeline_mlflow_runid", pipeline.run_id)
+    r.set("pipeline", yaml.dump(pipeline._serialize()))
+
+
+def _exec_end_run():
     import redis
 
     r = redis.Redis.from_url(
         AIRFLOW__CELERY__BROKER_URL[:-1], db=DOCKER_COMPONENT_REDIS_DB
     )
 
-    if r.exists("mlflow_runids"):
-        r.delete("mlflow_runids")
-
-    MlflowUtils.init_mlflow_client(
-        mlflow_info.mlflow_tracking_uri, mlflow_info.mlflow_registry_uri
-    )
-    pipelinne_mlflow_run = mlflow.start_run(
-        experiment_id=MlflowUtils.get_exp_id(mlflow_info.mlflow_exp_id),
-        run_name=mlflow_info.name,
+    pipeline = pipeline_module.Pipeline.load(
+        yaml.load(r.get("pipeline").decode("utf-8"))
     )
 
-    r.hset("mlflow_runids", "pipeline_mlflow_runid", pipelinne_mlflow_run.info.run_id)
+    run_ids = r.hgetall("mlflow_runids")
+    for run_name, run_id in run_ids.items():
+        run_name = run_name.decode("utf-8")
+        run_id = run_id.decode("utf-8")
+        if run_name == "pipeline_mlflow_runid":
+            pipeline.mlflow_info.mlflow_run_id = run_id
+        else:
+            pipeline.operators[run_name].run_id = run_id
+
+    print(pipeline)
+    pipeline.log_mlflow()
+    r.delete("mlflow_runids")
+    r.delete("pipeline")
