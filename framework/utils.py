@@ -5,21 +5,21 @@ import os
 import tempfile
 import subprocess
 
-from requests.api import head
-
 
 class Utils:
     @staticmethod
     def download_zip(request_url, headers, download_path):
         import zipfile
 
-        resp = requests.request("GET", request_url, headers=headers, verify=False)
+        resp = requests.request(
+            "GET", request_url, headers=headers, verify=False)
         z = zipfile.ZipFile(io.BytesIO(resp.content))
         z.extractall(download_path)
 
     @staticmethod
     def download_checksum(checksum_sha1_url, headers):
-        resp = requests.request("GET", checksum_sha1_url, headers=headers, verify=False)
+        resp = requests.request("GET", checksum_sha1_url,
+                                headers=headers, verify=False)
         return resp.text
 
     @staticmethod

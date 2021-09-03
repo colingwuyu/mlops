@@ -1,14 +1,7 @@
 """Wrap sklearn Pipeline"""
 import os
-from collections import OrderedDict
-
-import numpy as np
-import sklearn
 import pickle
 
-from mlops.utils.functionutils import call_func
-from mlops.types import ModelInput, ModelOutput
-import mlops.serving.estimator.consts as consts
 from mlops.serving.estimator.estimator import Estimator
 
 # FUNC_PROBABILITIES = "predict_proba"

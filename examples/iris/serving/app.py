@@ -3,14 +3,11 @@ from os.path import join as pjoin
 import pathlib
 
 from flask import Flask, request, abort, send_file, render_template, Response
-import numpy as np
 import pandas as pd
-from requests.models import HTTPError
 
 from mlops.config import Config as conf
 from mlops.utils.sysutils import path_splitall
 from mlops.utils.collectionutils import convert_json_type
-from mlops.model_analysis import FILE_EVAL_RESULT, view_report
 from examples.iris.serving.helper import load_model
 
 conf.load("config_{}.yaml".format(os.environ.get("IRIS_ENV", "local")))
@@ -94,7 +91,8 @@ def perf_report_listing(req_path):
     for file_name in os.listdir(abs_path):
         if file_name == "report.html":
             return render_template(
-                os.path.join(*path_splitall(os.path.join(abs_path, file_name))[1:])
+                os.path.join(
+                    *path_splitall(os.path.join(abs_path, file_name))[1:])
             )
 
     # Show directory contents
@@ -127,7 +125,8 @@ def data_report_listing(req_path):
     for file_name in os.listdir(abs_path):
         if file_name == "report.html":
             return render_template(
-                os.path.join(*path_splitall(os.path.join(abs_path, file_name))[1:])
+                os.path.join(
+                    *path_splitall(os.path.join(abs_path, file_name))[1:])
             )
 
     # Show directory contents

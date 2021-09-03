@@ -1,11 +1,9 @@
-import json
 import os
 
 from airflow.operators.docker_operator import DockerOperator
 from docker.types import Mount
 
 from mlops.orchestrators.datatype import ComponentSpec
-from mlops.orchestrators.airflow.airflow_util import create_entry_point
 
 AIRFLOW_HOME = os.environ.get("AIRFLOW_HOME")
 AIRFLOW__CELERY__BROKER_URL = os.environ.get("AIRFLOW__CELERY__BROKER_URL")
@@ -20,17 +18,12 @@ DOCKER_COMPONENT_REDIS_DB = "1"
 # a wrapper class
 class MlopsComponentDockerOperator(DockerOperator):
     def __init__(self, mlops_component_spec: ComponentSpec, *args, **kwargs):
-        entry_point_module_dir = os.path.join(AIRFLOW_HOME, AIRFLOW_COMPONENT_SUBDIR)
-        entry_point_module_name = create_entry_point(
-            mlops_component_spec, entry_point_module_dir
-        )
-        entry_point_module = os.path.join(DOCKER_COMPONENT_DIR, entry_point_module_name)
         task_id = mlops_component_spec.name
         super().__init__(
             image="mlops-base:latest",
             task_id=task_id,
             container_name=f"iris_train_dag_task__{task_id}",
-            command=f"python {entry_point_module}",
+            command=f"python -m mlops.orchestrators.airflow.airflow_entrypoint {task_id}",
             api_version="auto",
             auto_remove=True,
             docker_url="unix://var/run/docker.sock",
@@ -43,8 +36,7 @@ class MlopsComponentDockerOperator(DockerOperator):
                 Mount(
                     target="/home/jovyan/mlflow_artifacts",
                     source="mlops_mlflow_artifacts",
-                ),
-                Mount(target=DOCKER_COMPONENT_DIR, source="mlops_pipeline_config"),
+                )
             ],
             network_mode="mlops-bridge",
             *args,

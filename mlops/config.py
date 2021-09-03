@@ -87,10 +87,12 @@ class Config:
                 if base_config_file_path is not None and Utils.is_file(
                     base_config_file_path
                 ):
-                    print("Loading base configuration from: ", base_config_file_path)
+                    print("Loading base configuration from: ",
+                          base_config_file_path)
                     cls.settings = cls._load_yaml_file(base_config_file_path)
                     # Override the base configuration with the given configuration file.
-                    cls.settings = update_dictionary(cls.settings, file_settings)
+                    cls.settings = update_dictionary(
+                        cls.settings, file_settings)
 
                 # The file being loaded is not override config, all set.
                 else:

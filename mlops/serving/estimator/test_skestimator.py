@@ -1,4 +1,3 @@
-from mlops.serving.estimator.consts import PREDICTION_KEY_PROBABILITIES
 
 
 if __name__ == "__main__":
@@ -15,4 +14,5 @@ if __name__ == "__main__":
     data = pd.read_csv("examples/iris/serving/data/inputs.csv")
     import pprint
 
-    pprint.pprint(loaded_model.predict(data, [consts.PREDICTION_KEY_PROBABILITIES]))
+    pprint.pprint(loaded_model.predict(
+        data, [consts.PREDICTION_KEY_PROBABILITIES]))

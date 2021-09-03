@@ -5,7 +5,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn import metrics
 
 from mlops.serving.estimator.skestimator import SkEstimator
-from mlops.components import model_training_component
+from mlops.components import base_component
 from mlops.serving import model as mlops_model
 from mlops.serving.model import (
     MODEL_COMP_SCALER,
@@ -25,33 +25,13 @@ from examples.iris.feature_transform import (
 
 
 OPS_NAME = "logistic_regression"
-OPS_DES = """
-# Logistic Regression
-This is logistic regression model training operation.
-## Task type
-- classification
-## Upstream dependencies
-- Data Gen
-- Data Validation
-- Feature Transformation
-## Parameter
-None
-## Metrics
-- test_log_loss
-- test_accuracy_score
-## Artifacts
-1. mlops_model: Mlflow Model 
-## Helper functions
-- `load_model(run_id: str)`
-"""
 
-LEARNING_FRAMEWORK = "sklearn"
 METRIC_TEST_ACCURACY = "test_accuracy_score"
 METRIC_TEST_LOGLOSS = "test_log_loss"
 ARTIFACT_MODEL = "mlops_model"
 
 
-@model_training_component(name=OPS_NAME, note=OPS_DES, framework=LEARNING_FRAMEWORK)
+@base_component
 def run_func(upstream_ids: dict, **kwargs):
     model_comps = {}
 

@@ -1,18 +1,14 @@
-from examples.iris import serving
 import json
-from mlops.model_analysis import view
 import os
 from datetime import datetime
 from typing import Optional, Text, Union, List
 
 import pandas as pd
-import numpy as np
 import tensorflow_data_validation as tfdv
 
 from mlops.model_analysis.proto import config_pb2 as config, result_pb2 as result
 import mlops.model_analysis.metrics as ma_metrics
 from mlops.model_analysis.utils import (
-    get_eval_data_stats,
     load_eval_result_text,
     write_eval_result_text,
     get_model_score,
@@ -52,7 +48,8 @@ def _generate_eval_result(
             kwargs["output"] = output_path
         metric_func = getattr(ma_metrics, name)
         try:
-            metric_result = metric_func(y_true=true_label, y_pred=prediction, **kwargs)
+            metric_result = metric_func(
+                y_true=true_label, y_pred=prediction, **kwargs)
         except BaseException as e:
             print(f"Warning: fail in calculating metric {name}. ", e)
             _eval_result_add_value(eval_result, name, -999)
@@ -103,7 +100,8 @@ def run_model_analysis(
         orig_model_name = eval_config.model_spec.name
         eval_config.model_spec.name = model_name
     true_label = data[list(eval_config.model_spec.label_keys)]
-    prediction = model.predict(data.drop(columns=eval_config.model_spec.label_keys))
+    prediction = model.predict(
+        data.drop(columns=eval_config.model_spec.label_keys))
 
     eval_result = _generate_eval_result(
         true_label, prediction, eval_config, output_path
@@ -127,7 +125,8 @@ def run_model_analysis(
     )
     if prev_data_stat:
         tfdv.write_stats_text(
-            prev_data_stat, os.path.join(output_path, FILE_PREV_EVAL_DATA_STATS)
+            prev_data_stat, os.path.join(
+                output_path, FILE_PREV_EVAL_DATA_STATS)
         )
     view_report(output_path, save=save_report)
 

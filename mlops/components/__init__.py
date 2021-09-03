@@ -1,3 +1,3 @@
-from mlops.components.base_component import base_component, ARG_MLFLOW_RUN_ID
+from mlops.components.base_component import base_component
 from mlops.components.pipeline_init_component import pipeline_init_component
 from mlops.components.model_training_component import model_training_component

@@ -1,4 +1,3 @@
-from mlops.model_analysis.utils import load_eval_result_text
 import shutil
 import tempfile
 import os
@@ -6,7 +5,6 @@ import os
 import mlflow
 
 from mlops.components import base_component
-from mlops.utils.mlflowutils import MlflowUtils
 import mlops.model_analysis as mlops_ma
 import mlops.model_analysis.metrics as mlops_ma_metrics
 from mlops.serving import model as mlops_model
@@ -14,27 +12,6 @@ import examples.iris.data_gen.helper as dg_helper
 from examples.iris.data_gen import OPS_NAME as DATA_GEN_OPS_NAME
 
 OPS_NAME = "model_eval"
-
-OPS_DES = """
-# Model Evaluation
-This is to evaluate trained models to select the best one for deployment
-## Task type
-- any
-## Upstreaam dependencies
-- Model training
-## Parameter
-compare_metric: performance metrics for model score
-## Metrics
-- test_accuracy_score
-## Artifacts
-1. Model
-## Helper functions
-- `load_model(run_id: str)`
-- `display_performance_eval_report(run_id: str, model_name: str)`
-- `get_model_metric_name(run_id: str)`
-- `get_selected_model_name(run_id: str)`
-- `get_selected_model_metric_value(run_id: str)`
-"""
 
 PARAM_COMPAR_METRIC = "compare_metric"
 
@@ -46,7 +23,7 @@ ARTIFACT_MODEL = "mlops_model"
 ARTIFACT_EVAL_REPORTS = "eval_reports"
 
 
-@base_component(name=OPS_NAME, note=OPS_DES)
+@base_component
 def run_func(upstream_ids: dict, **kwargs):
     # artifact directory
     artifact_dir = tempfile.mkdtemp()
@@ -86,7 +63,8 @@ def run_func(upstream_ids: dict, **kwargs):
         loaded_models[model_name] = mlops_model.load_model(
             f"runs:/{model_run_id}/{ARTIFACT_MODEL}"
         )
-        eval_result_output_path = os.path.join(eval_result_dir, f"{model_name}")
+        eval_result_output_path = os.path.join(
+            eval_result_dir, f"{model_name}")
         mlops_ma.run_model_analysis(
             model=loaded_models[model_name],
             model_name=model_name,

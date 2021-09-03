@@ -4,7 +4,8 @@ import os
 
 import mlflow
 
-from mlops.components import base_component, ARG_MLFLOW_RUN_ID
+from mlops.components import base_component
+from mlops.consts import ARG_MLFLOW_RUN
 from mlops.utils.mlflowutils import MlflowUtils
 import mlops.serving.model as mlops_model
 import mlops.model_analysis as mlops_ma
@@ -14,19 +15,6 @@ from examples.iris.model_eval import OPS_NAME as MODEL_EVAL_OPS_NAME
 from examples.iris.model_eval import helper as me_helper
 
 OPS_NAME = "model_pub"
-OPS_DES = """
-# Model Publisher
-This is to publish a model into registry for serving
-## Task type
-- any
-## Upstream dependencies
-- Data Extraction
-- Dataset Split
-- Feature Transformation
-- Data Validation
-- Feature Transformation
-- Model Evaluation
-"""
 
 ARTIFACT_MODEL = "mlops_model"
 PARAM_MODEL_REGISTRY_NAME = "model_registry_name"
@@ -35,17 +23,18 @@ TAG_VAL_MODEL_PUB_SUCCESS = "success"
 TAG_VAL_MODEL_PUB_FAIL = "fail"
 
 
-@base_component(name=OPS_NAME, note=OPS_DES)
+@base_component
 def run_func(upstream_ids: dict, **kwargs):
     # load parameters
     model_registry_name = kwargs[PARAM_MODEL_REGISTRY_NAME]
     # load upstream run ids
     model_eval_run_id = upstream_ids[MODEL_EVAL_OPS_NAME]
 
-    loaded_model: mlops_model.MlopsLoadModel = me_helper.load_model(model_eval_run_id)
+    loaded_model: mlops_model.MlopsLoadModel = me_helper.load_model(
+        model_eval_run_id)
 
     # evaluate production model
-    cur_run_id = kwargs[ARG_MLFLOW_RUN_ID].info.run_id
+    cur_run_id = kwargs[ARG_MLFLOW_RUN]
     if not MlflowUtils.mlflow_client.search_registered_models(
         f"name='{model_registry_name}'"
     ):
@@ -80,7 +69,8 @@ def run_func(upstream_ids: dict, **kwargs):
             output_path=retrain_eval_result_dir,
             save_report=True,
         )
-        prod_eval_result_dir = os.path.join(artifact_dir, "prod_model_eval_report")
+        prod_eval_result_dir = os.path.join(
+            artifact_dir, "prod_model_eval_report")
         mlops_ma.run_model_analysis(
             model=prod_model,
             data=eval_X.join(eval_y),

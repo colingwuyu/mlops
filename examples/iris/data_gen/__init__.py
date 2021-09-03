@@ -14,33 +14,7 @@ logger = logging.getLogger("IRIS")
 
 
 OPS_NAME = "data_gen"
-OPS_DES = """
-# Data Generation 
-This is a data generation operation
-## Task type
-- any
-## Upstream dependencies
-None
-## Parameters
-- url:                  data url
-- x_headers (list):     x header
-- y_headers (str):     y header
-- test_size:            percentage for test set [0-1.0] (default 0.20)
-## Metrics
-None
-## Artifacts
-1. train_X.csv:        train dataset file of X
-2. test_X.csv:         test dataset file of X
-3. train_y.csv:        train dataset file of y
-4. test_y.csv:        test dataeset file of y
-## Helper functions
-- `load_train_X(run_id: str)`
-- `load_train_y(run_id: str)`
-- `load_test_X(run_id: str)`
-- `load_test_y(run_id: str)`
-- `get_label_header(run_id: str)`
-- `get_feature_header(run_id: str)`
-"""
+
 PARAM_X_HEADERS = "x_headers"
 PARAM_Y_HEADER = "y_header"
 PARAM_TEST_SIZE = "test_size"
@@ -52,7 +26,7 @@ ARTIFACT_TEST_X = "test_X.csv"
 ARTIFACT_TEST_Y = "test_y.csv"
 
 
-@base_component(name=OPS_NAME, note=OPS_DES)
+@base_component
 def run_func(**kwargs):
     # Load parameters
     url = kwargs[PARAM_URL]

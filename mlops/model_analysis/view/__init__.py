@@ -3,7 +3,6 @@ from typing import Text
 
 from IPython.core.display import display, HTML
 from jinja2 import Environment, FileSystemLoader
-from numpy.lib.function_base import disp
 import pandas as pd
 import tensorflow_data_validation as tfdv
 from tensorflow_data_validation.utils.display_util import (
@@ -43,7 +42,8 @@ def view_report(
         loader=FileSystemLoader(os.path.dirname(os.path.abspath(__file__)))
     )
     report_template = jinjia_env.get_template("performance_report.html")
-    eval_result: result_pb2.EvalResult = load_eval_result_text(eval_result_path)
+    eval_result: result_pb2.EvalResult = load_eval_result_text(
+        eval_result_path)
     meta_table = pd.Series(name="Meta Data")
     meta_table["Evaluation Date"] = eval_result.eval_date
     meta_table["Model Name"] = eval_result.model_spec.name
@@ -58,7 +58,8 @@ def view_report(
         metric_result = eval_result.metric_results[metric_name]
         if metric_result.HasField("report"):
             reports.append(
-                [metric_name, convert_pandas_df(metric_result.report).to_html()]
+                [metric_name, convert_pandas_df(
+                    metric_result.report).to_html()]
             )
         elif metric_result.HasField("url"):
             if _is_view_for_flask(report_save_path):

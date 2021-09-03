@@ -2,7 +2,6 @@ import os
 from collections import namedtuple
 import collections
 from pathlib import Path
-from posix import environ
 from framework.utils import Utils
 
 
@@ -16,7 +15,8 @@ def convert_to_namedtuple(dictionary: dict):
 def update_dictionary(base, updated, restricted={}):
     for k, v in updated.items():
         if isinstance(v, collections.abc.Mapping):
-            base[k] = update_dictionary(base.get(k, {}), v, restricted.get(k, {}))
+            base[k] = update_dictionary(
+                base.get(k, {}), v, restricted.get(k, {}))
         else:
             if k not in restricted:
                 base[k] = v
@@ -33,7 +33,8 @@ def update_dictionary(base, updated, restricted={}):
 def get_config_path(environment):
     mlops_config_dir = os.environ.get(
         "MLOPS_CONFIG_DIR",
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "config_files"),
+        os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), "config_files"),
     )
     if not mlops_config_dir:
         print(
@@ -85,7 +86,8 @@ class Config:
                 if base_config_file_path is not None and Utils.is_file(
                     base_config_file_path
                 ):
-                    print("Loading base configuration from: ", base_config_file_path)
+                    print("Loading base configuration from: ",
+                          base_config_file_path)
                     cls.settings = cls._load_yaml_file(base_config_file_path)
                     cls.settings = update_dictionary(
                         cls.settings, file_settings, restricted_config
