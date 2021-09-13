@@ -23,7 +23,7 @@ class MlopsComponentDockerOperator(DockerOperator):
             image="mlops-base:latest",
             task_id=task_id,
             container_name=f"iris_train_dag_task__{task_id}",
-            command=f"python -m mlops.orchestrators.airflow.airflow_entrypoint {task_id}",
+            command=f"python -m mlops.orchestrators.airflow.airflow_entrypoint {task_id} {{ task_instance.xcom_pull(task_ids='init_mlflow', key='pipeline') }}",
             api_version="auto",
             auto_remove=True,
             docker_url="unix://var/run/docker.sock",

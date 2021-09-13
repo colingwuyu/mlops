@@ -111,7 +111,7 @@ def _transit_status_done():
     print(cur_status.transit())
 
 
-def _exec_init_run(pipeline: pipeline_module.Pipeline):
+def _exec_init_run(pipeline: pipeline_module.Pipeline, **kwargs):
     import redis
 
     r = redis.Redis.from_url(
@@ -120,6 +120,8 @@ def _exec_init_run(pipeline: pipeline_module.Pipeline):
     print(pipeline)
     pipeline.init_mlflow_pipeline()
     print(pipeline)
+    kwargs['ti'].xcom_push(
+        key='pipeline', value=yaml.dump(pipeline._serialize()))
 
     r.set("pipeline", yaml.dump(pipeline._serialize()))
     r.set("pipeline_run_id", pipeline.run_id)
