@@ -1,0 +1,63 @@
+name: "IRIS Training Pipeline"
+uri: https://github.com/colingwuyu/mlops.git
+version: 5658447300119a5ce2713b793ce1c71f2c853428
+# uri: /app
+components:
+    data_gen:
+        pipeline_init: True
+        module_file: examples/iris/data_gen/__init__.py
+        run_id: '95e5e13717ef4c7389a3b69fd20897a0'
+        args:
+            url: "http://iris_serving:3000/data"
+            x_headers:
+            - sepal-length
+            - sepal-width
+            - petal-length
+            - petal-width
+            y_header: species
+            test_size: 0.2
+    data_validation:
+        module_file: examples/iris/data_validation/__init__.py
+        run_id: '96abd9cd7cfb46f880144d1dbdcbf8f5'
+        upstreams: 
+            - data_gen
+    feature_transform:
+        module_file: examples/iris/feature_transform/__init__.py
+        args:
+            transform_approach: standardization
+        upstreams: 
+            - data_gen
+    logistic_regression:
+        module_file: examples/iris/logistic_regression/__init__.py
+        upstreams:
+            - data_gen
+            - data_validation
+            - feature_transform
+    linear_discriminant_analysis:
+        module_file: examples/iris/linear_discriminant_analysis/__init__.py
+        upstreams:
+            - data_gen
+            - data_validation
+            - feature_transform
+    mlp_multiclassifier:
+        module_file: examples/iris/mlp_multiclassifier/__init__.py
+        upstreams:
+            - data_gen
+            - data_validation
+            - feature_transform
+        args:
+            num_neurons: 10
+            learning_rate: 0.1
+            epochs: 100
+    model_eval:
+        pipeline_end: True
+        module_file: examples/iris/model_eval/__init__.py
+        upstreams:
+            - data_gen
+            - logistic_regression
+            - linear_discriminant_analysis
+            - mlp_multiclassifier
+mlflow:
+    exp_id: "Sandbox"
+    tracking_uri: http://mlflow_server:5000
+    registry_uri: http://mlflow_server:5000

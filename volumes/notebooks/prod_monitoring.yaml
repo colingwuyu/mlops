@@ -1,0 +1,7 @@
+model_name: IRIS
+data_monitoring:
+    data_counter_file: "data_val_counter"
+    count_frequency: 1000
+performance_monitoring:
+    perf_counter_file: "perf_eval_counter"
+    count_frequency: 3000
