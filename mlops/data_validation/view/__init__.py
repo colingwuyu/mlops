@@ -39,7 +39,8 @@ def view_report(
     train_data_stats = model.trainset_stats
     eval_data_stats = tfdv.generate_statistics_from_dataframe(serving_data)
     if prev_data is not None:
-        prev_eval_data_stats = tfdv.generate_statistics_from_dataframe(prev_data)
+        prev_eval_data_stats = tfdv.generate_statistics_from_dataframe(
+            prev_data)
     else:
         prev_eval_data_stats = None
     data_schema = model.data_schema

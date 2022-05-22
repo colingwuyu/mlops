@@ -4,7 +4,6 @@ import yaml
 
 import mlflow
 from mlflow.tracking import MlflowClient
-from mlflow.tracking.artifact_utils import _download_artifact_from_uri
 
 from mlops.utils.sysutils import is_windows
 
@@ -78,20 +77,23 @@ class MlflowUtils:
     @staticmethod
     def _path(file_path):
         if is_windows():
-            return file_path[8:]  # remove appendix 'file:///' appearing in path
+            # remove appendix 'file:///' appearing in path
+            return file_path[8:]
         return file_path
 
     @classmethod
     def get_artifact_path(cls, run_id: str, artifact_file: str):
         run = cls._get_run(run_id)
-        artifact_path = cls._path(os.path.join(run.info.artifact_uri, artifact_file))
+        artifact_path = cls._path(os.path.join(
+            run.info.artifact_uri, artifact_file))
         return artifact_path
 
     class ArtifactFileObj(object):
         """Context manager for artifact file object"""
 
         def __init__(self, run_id: str, artifact_file: str) -> None:
-            artifact_path = MlflowUtils.get_artifact_path(run_id, artifact_file)
+            artifact_path = MlflowUtils.get_artifact_path(
+                run_id, artifact_file)
             self.artifact_file_obj = open(artifact_path)
 
         def __enter__(self):

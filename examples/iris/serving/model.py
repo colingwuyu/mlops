@@ -3,7 +3,6 @@ import shutil
 import uuid
 
 import mlflow.pyfunc
-import tensorflow
 import tensorflow_data_validation as tfdv
 import cloudpickle
 import pandas as pd
@@ -11,8 +10,10 @@ import pandas as pd
 
 class PyModelWrapper(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
-        self._trainset_stats = tfdv.load_stats_text(context.artifacts["trainset_stats"])
-        self._data_schema = tfdv.load_schema_text(context.artifacts["data_schema"])
+        self._trainset_stats = tfdv.load_stats_text(
+            context.artifacts["trainset_stats"])
+        self._data_schema = tfdv.load_schema_text(
+            context.artifacts["data_schema"])
         with open(context.artifacts["scaler"], "rb") as scaler_io:
             self._feature_scaler = cloudpickle.load(scaler_io)
         with open(context.artifacts["model"], "rb") as model_io:

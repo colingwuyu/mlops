@@ -12,27 +12,6 @@ from examples.iris.data_gen import OPS_NAME as DATA_GEN_OPS_NAME
 
 OPS_NAME = "feature_transform"
 
-OPS_DES = """
-# Feature Transformation
-This is a feature transformation operation.
-This operation adopts several common feature scaling transformation approaches, such as:
-- min-max
-- standardization
-## Task type
-- any
-## Upstream dependencies
-- Data extraction
-- Dataset split
-## Paramter
-- transform_approach: transformation approache (minmax/std)
-## Metrics
-None
-## Artifacts
-1. scaler.pkl
-## Helper functions
-- `load_scaler(run_id: str)`
-"""
-
 PARAM_TRANSFORM_APPROACH = "transform_approach"
 PARAM_VAL_MIN_MAX = "min-max"
 PARAM_VAL_STD = "standardization"
@@ -40,7 +19,7 @@ PARAM_VAL_STD = "standardization"
 ARTIFACT_SCALER = "scaler.pkl"
 
 
-@base_component(name=OPS_NAME, note=OPS_DES)
+@base_component
 def run_func(upstream_ids: dict, **kwargs):
     import sklearn.preprocessing as processor
 
@@ -61,6 +40,7 @@ def run_func(upstream_ids: dict, **kwargs):
         )
 
     scaler.fit(X_train)
-    cloudpickle.dump(scaler, open(os.path.join(artifact_dir, ARTIFACT_SCALER), "wb"))
+    cloudpickle.dump(scaler, open(os.path.join(
+        artifact_dir, ARTIFACT_SCALER), "wb"))
     mlflow.log_artifacts(artifact_dir)
     shutil.rmtree(artifact_dir)

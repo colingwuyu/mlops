@@ -1,4 +1,3 @@
-import abc
 import os
 import json
 from typing import Union, Text
@@ -109,7 +108,8 @@ def roc_curve_display(y_true, y_pred, output: Text = ".") -> MetricResult:
         i_labels = y_true_one_hot_ids[:, i]
         #     i_labels = np.random.choice([0,1], predict_probs.shape[0])
         i_predict_scores = predict_probs[:, i]
-        fpr, tpr, _ = sklearn.metrics.roc_curve(i_labels, i_predict_scores, pos_label=1)
+        fpr, tpr, _ = sklearn.metrics.roc_curve(
+            i_labels, i_predict_scores, pos_label=1)
         sklearn.metrics.RocCurveDisplay(fpr=fpr, tpr=tpr).plot(ax=ax)
         ax.set_title(class_)
     fig.suptitle("ROC Curve")

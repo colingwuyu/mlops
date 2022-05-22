@@ -50,7 +50,8 @@ class Estimator(ABC):
         self._estimator_type = model._estimator_type
         if self._estimator_type == "classifier":
             self._all_classes_mapping = OrderedDict()
-            self._all_classes_one_hot = np.identity(len(self._estimator.classes_))
+            self._all_classes_one_hot = np.identity(
+                len(self._estimator.classes_))
             for i, class_ in enumerate(self._estimator.classes_):
                 self._all_classes_mapping[class_] = dict(
                     [
@@ -61,8 +62,10 @@ class Estimator(ABC):
                         ),
                     ]
                 )
-            self._all_class_ids = np.array(list(self._all_classes_mapping.values()))
-            self._all_classes = np.array(list(self._all_classes_mapping.keys()))
+            self._all_class_ids = np.array(
+                list(self._all_classes_mapping.values()))
+            self._all_classes = np.array(
+                list(self._all_classes_mapping.keys()))
             self._prediction = OrderedDict(
                 [
                     (consts.PREDICTION_KEY_PROBABILITIES, "predict_proba"),
@@ -91,9 +94,11 @@ class Estimator(ABC):
             return self._all_classes_mapping[class_][prediction_key]
 
         if consts.PREDICTION_KEY_CLASSES not in predictions:
-            predictions[consts.PREDICTION_KEY_CLASSES] = self._estimator.predict(data)
+            predictions[consts.PREDICTION_KEY_CLASSES] = self._estimator.predict(
+                data)
         return np.array(
-            list(map(_class_id_map, predictions[consts.PREDICTION_KEY_CLASSES]))
+            list(
+                map(_class_id_map, predictions[consts.PREDICTION_KEY_CLASSES]))
         )
 
     def class_ids(self, data, predictions):

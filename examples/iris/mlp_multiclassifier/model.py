@@ -48,7 +48,8 @@ class MlpClassifierDataSet(Dataset):
         super().__init__()
         label_name = label.columns.values[0]
         self.classes_ = list(tfdv.get_domain(data_schema, label_name).value)
-        self.class_to_idx = {_class: i for i, _class in enumerate(self.classes_)}
+        self.class_to_idx = {_class: i for i,
+                             _class in enumerate(self.classes_)}
         self.idx_to_classes = {y: x for x, y in self.class_to_idx.items()}
         self.targets = torch.from_numpy(
             label[label_name].map(self.class_to_idx, na_action="ignore").values
@@ -111,7 +112,8 @@ class MlpClassifierTrainer:
                 if not log_graph:
                     tb.add_graph(net, features)
                     log_graph = True
-                features, labels = features.to(self.device), labels.to(self.device)
+                features, labels = features.to(
+                    self.device), labels.to(self.device)
                 scores = net(features)
                 _, predictions = torch.max(scores, dim=1)
                 label_prediction += list(
@@ -151,7 +153,8 @@ class MlpClassifierTrainer:
                     getattr(net, layer_name).weight,
                     epoch,
                 )
-            tb.add_histogram("fc_layer_output.bias", net.fc_layer_output.bias, epoch)
+            tb.add_histogram("fc_layer_output.bias",
+                             net.fc_layer_output.bias, epoch)
             tb.add_histogram(
                 "fc_layer_output.weight", net.fc_layer_output.weight, epoch
             )
@@ -188,7 +191,8 @@ class MlpClassifierTrainer:
 
         with torch.no_grad():
             for features, labels in test_loader:
-                features, labels = features.to(self.device), labels.to(self.device)
+                features, labels = features.to(
+                    self.device), labels.to(self.device)
                 scores = net(features)
                 _, predictions = torch.max(scores, dim=1)
                 label_prediction += list(
@@ -226,7 +230,8 @@ class MlpClassifierTrainer:
     ):
         labels = np.array(labels)
         predictions = np.array(predictions)
-        test_report = classification_report(labels, predictions, output_dict=True)
+        test_report = classification_report(
+            labels, predictions, output_dict=True)
 
         # log epoch
         metrics = {}
@@ -282,7 +287,8 @@ class MlpClassifier(TorchModel):
     @classes_.setter
     def classes_(self, classes_):
         self.__classes = classes_
-        self.class_to_idx = {_class: i for i, _class in enumerate(self.__classes)}
+        self.class_to_idx = {_class: i for i,
+                             _class in enumerate(self.__classes)}
         self.idx_to_classes = {y: x for x, y in self.class_to_idx.items()}
 
     def train(

@@ -14,30 +14,6 @@ from examples.iris.data_gen import OPS_NAME as DATA_GEN_OPS_NAME
 
 
 OPS_NAME = "data_validation"
-OPS_DES = """
-# Dataset Validation
-this is a data validation operation
-## Task type
-- supervised-learning
-- classification
-## Upstream dependencies
-- Data extraction
-- Dataset split
-## Parameters
-None
-## Metrics
-None
-## Artifacts
-1. schema.pbtxt
-2. trainset_stat.pbtxt
-3. scatter_plot.png
-## Helper functions
-- `get_schema(run_id: str)`
-- `display_schema(run_id: str)`
-- `get_trainset_stat(run_id: str)`
-- `display_trainset_stat(run_id: str)`
-- `display_scatter_plot(run_id: str)`
-"""
 
 TRAINING_ENV = "TRAINING"
 SERVING_ENV = "SERVING"
@@ -48,7 +24,7 @@ ARTIFACT_SCHEMA = "schema.txt"
 ARTIFACT_PLOT = "scatter_plot.png"
 
 
-@base_component(name=OPS_NAME, note=OPS_DES)
+@base_component
 def run_func(upstream_ids: dict, **kwargs):
     data_gen_id = upstream_ids[DATA_GEN_OPS_NAME]
 
@@ -80,7 +56,8 @@ def run_func(upstream_ids: dict, **kwargs):
     label_type.skew_comparator.infinity_norm.threshold = 0.15
 
     # Specify that label feature (Y) is not in SERVING environment.
-    tfdv.get_feature(schema, label_header).not_in_environment.append(SERVING_ENV)
+    tfdv.get_feature(
+        schema, label_header).not_in_environment.append(SERVING_ENV)
 
     artifact_dir = tempfile.mkdtemp()
     stat_file = os.path.join(artifact_dir, ARTIFACT_TRAINSET_STATS)

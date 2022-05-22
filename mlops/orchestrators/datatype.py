@@ -63,6 +63,8 @@ class ComponentSpec(object):
             short_args.pop("mlflow_info")
         if "upstream_ids" in short_args:
             short_args.pop("upstream_ids")
+        if "mlflow_run" in short_args:
+            short_args.pop("mlflow_run")
         if self.module:
             module_repr = f"module: {self.module}\n\t"
         elif self.module_file:
@@ -80,9 +82,13 @@ class ComponentSpec(object):
             short_args.pop("mlflow_info")
         if "upstream_ids" in short_args:
             short_args.pop("upstream_ids")
+        if "mlflow_run" in short_args:
+            short_args.pop("mlflow_run")
 
         if self.pipeline_init:
             component_dict["pipeline_init"] = True
+        if self.pipeline_end:
+            component_dict["pipeline_end"] = True
         if self.module_file:
             component_dict["module_file"] = self.module_file
         if self.module:
@@ -135,12 +141,12 @@ class MLFlowInfo(object):
             self.mlflow_run_id,
         )
 
-    def init_mlflow_run(self):
-        mlflow_run = mlflow.start_run(
-            experiment_id=MlflowUtils.get_exp_id(self.mlflow_exp_id), run_name=self.name
-        )
-        self.mlflow_run_id = mlflow_run.info.run_id
-        mlflow.end_run()
+    # def init_mlflow_run(self):
+    #     mlflow_run = mlflow.start_run(
+    #         experiment_id=MlflowUtils.get_exp_id(self.mlflow_exp_id), run_name=self.name
+    #     )
+    #     self.mlflow_run_id = mlflow_run.info.run_id
+    #     mlflow.end_run()
 
     def _serialize(self):
         mlflow_dict = dict()

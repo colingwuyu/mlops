@@ -1,0 +1,61 @@
+name: "IRIS Training Pipeline"
+# uri: https://github.com/colingwuyu/mlops.git
+# version: 80a9ed5a0634fdab366262118aceaba8cc67576d
+uri: /home/colin/projects/docker_projects/mlops
+components:
+  data_gen:
+    pipeline_init: True
+    module: examples.iris.data_gen
+    args:
+      url: "http://localhost:3000/data"
+      x_headers:
+        - sepal-length
+        - sepal-width
+        - petal-length
+        - petal-width
+      y_header: species
+      test_size: 0.2
+  data_validation:
+    module: examples.iris.data_validation
+    upstreams:
+      - data_gen
+  feature_transform:
+    module: examples.iris.feature_transform
+    args:
+      transform_approach: min-max
+    upstreams:
+      - data_gen
+  logistic_regression:
+    module: examples.iris.logistic_regression
+    upstreams:
+      - data_gen
+      - data_validation
+      - feature_transform
+  linear_discriminant_analysis:
+    module: examples.iris.linear_discriminant_analysis
+    upstreams:
+      - data_gen
+      - data_validation
+      - feature_transform
+  mlp_multiclassifier:
+    module: examples.iris.mlp_multiclassifier
+    upstreams:
+      - data_gen
+      - data_validation
+      - feature_transform
+    args:
+      num_neurons: 10
+      learning_rate: 0.1
+      epochs: 100
+  model_eval:
+    pipeline_end: True
+    module: examples.iris.model_eval
+    upstreams:
+      - data_gen
+      - logistic_regression
+      - linear_discriminant_analysis
+      - mlp_multiclassifier
+mlflow:
+  exp_id: "Default"
+  tracking_uri: http://localhost:5001
+  registry_uri: http://localhost:5001

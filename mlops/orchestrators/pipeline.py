@@ -16,6 +16,7 @@ from mlflow.utils.mlflow_tags import (
     MLFLOW_GIT_BRANCH,
 )
 
+from mlops import consts
 from mlops.orchestrators import datatype
 from mlops.utils.collectionutils import convert_to_namedtuple
 from mlops.utils.strutils import pad_tab
@@ -126,7 +127,8 @@ class Pipeline:
             component_val = component_val._asdict()
             component_args = component_val.get("args")
             cur_component_args = (
-                copy.deepcopy(component_args._asdict()) if component_args else {}
+                copy.deepcopy(component_args._asdict()
+                              ) if component_args else {}
             )
             cur_component_args["mlflow_info"] = self.mlflow_info
             cur_component_spec = datatype.ComponentSpec(
@@ -163,7 +165,8 @@ class Pipeline:
     def __repr__(self) -> str:
         str_operators = "(\n"
         for ops_name, ops in self.operators.items():
-            str_operators += "\t" + ops_name + " :\n" + pad_tab(str(ops), 2) + "\n"
+            str_operators += "\t" + ops_name + \
+                " :\n" + pad_tab(str(ops), 2) + "\n"
         str_operators += ")"
         return f"Pipeline(\n\tname: {self.name}\n\trun_id: {self.mlflow_info.mlflow_run_id}\n\toperators:\n{pad_tab(str_operators)})"
 
@@ -189,10 +192,39 @@ class Pipeline:
         pipeline_yml["mlflow"] = self.mlflow_info._serialize()
         return pipeline_yml
 
-    def log_mlflow(self):
-        MlflowUtils.mlflow_client.log_dict(
-            self.run_id, self._serialize(), ARTIFACT_PIPELINE
+    def init_mlflow_pipeline(self):
+        exp_id = MlflowUtils.get_exp_id(self.mlflow_info.mlflow_exp_id)
+        pipeline_run = mlflow.start_run(
+            experiment_id=exp_id, run_name=self.name)
+        self.mlflow_info.mlflow_run_id = pipeline_run.info.run_id
+        for component_name, component_spec in self.operators.items():
+            if component_spec.run_id is None:
+                component_run = mlflow.start_run(
+                    nested=True, experiment_id=exp_id, run_name=component_name)
+                component_spec.run_id = component_spec.args[consts.ARG_MLFLOW_RUN] = component_run.info.run_id
+
+                component_dict = component_spec._serialize()
+                for component_attr_name, component_attr_val in component_dict.items():
+                    if component_attr_name != "args":
+                        mlflow.set_tag(
+                            f"component.{component_attr_name}", component_attr_val)
+                    else:
+                        for arg_name, arg_val in component_attr_val.items():
+                            mlflow.log_param(arg_name, arg_val)
+                mlflow.end_run('SCHEDULED')
+        mlflow.log_dict(
+            self._serialize(), ARTIFACT_PIPELINE
         )
+        mlflow.end_run('SCHEDULED')
+
+    def end_mlflow_pipeline(self):
+        mlflow.start_run(run_id=self.run_id)
+        mlflow.end_run()
+
+    # def log_mlflow(self):
+    #     MlflowUtils.mlflow_client.log_dict(
+    #         self.run_id, self._serialize(), ARTIFACT_PIPELINE
+    #     )
 
     @classmethod
     def view(cls, mlflow_info: datatype.MLFlowInfo) -> "Pipeline":

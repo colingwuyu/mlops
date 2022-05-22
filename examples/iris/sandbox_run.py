@@ -10,11 +10,7 @@ def retrain():
     from mlops.orchestrators.pipeline import Pipeline
     from mlops.orchestrators.local.local_dag_runner import LocalDagRunner
 
-    pipeline = Pipeline(
-        name=conf.settings.model.name,
-        components=conf.settings.model.ct_pipeline,
-        mlflow_conf=conf.settings.mlflow,
-    )
+    pipeline = Pipeline.load(conf.settings)
     LocalDagRunner().run(pipeline)
 
 
@@ -28,4 +24,6 @@ def load_model(stage: str):
 
 
 if __name__ == "__main__":
+    conf.load(config_from="examples/iris/sandbox_config_{}.yaml".format(
+        os.environ.get("IRIS_ENV", "local")))
     retrain()

@@ -19,5 +19,3 @@ postgresql:
   enabled: false
 externalDatabase:
   password: test
-
-

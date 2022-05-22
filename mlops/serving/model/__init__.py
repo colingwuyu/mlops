@@ -1,19 +1,12 @@
 import logging
-import pickle
-import uuid
 import os
-import importlib
 import yaml
-from abc import ABCMeta, abstractmethod
 from typing import Any, Optional, Union, List, Dict, Text
-from os import mkdir
 from copy import deepcopy
 import posixpath
 import shutil
 
 import cloudpickle
-import numpy as np
-import pandas
 import mlflow.pyfunc
 from mlflow.pyfunc.model import get_default_conda_env
 from mlflow.models import Model as Mlflow_Model, ModelSignature, ModelInputExample
@@ -26,7 +19,6 @@ from mlflow.utils.file_utils import TempDir, _copy_file_or_tree
 from mlflow.exceptions import MlflowException
 from mlflow.tracking._model_registry import DEFAULT_AWAIT_MAX_SLEEP_SECONDS
 from mlflow.protos.databricks_pb2 import (
-    INVALID_PARAMETER_VALUE,
     RESOURCE_ALREADY_EXISTS,
     RESOURCE_DOES_NOT_EXIST,
 )
@@ -246,7 +238,8 @@ class MlopsModel(object):
         anomalies_df = get_anomalies_dataframe(serving_stats_anomalies)
         scaled_inputs = self._scaler.transform(data)
         predictions = self._model.predict(scaled_inputs, predict_keys)
-        predictions[PREDICTION_KEY_ANOMALY] = anomalies_df.to_dict(orient="split")
+        predictions[PREDICTION_KEY_ANOMALY] = anomalies_df.to_dict(
+            orient="split")
         return predictions
 
     def evaluate(self, labeled_data: ModelInputExample):
@@ -512,7 +505,8 @@ def save_model(
     if code_paths is not None:
         saved_code_subpath = "code"
         for code_path in code_paths:
-            _copy_file_or_tree(src=code_path, dst=path, dst_dir=saved_code_subpath)
+            _copy_file_or_tree(src=code_path, dst=path,
+                               dst_dir=saved_code_subpath)
 
     if artifacts:
         saved_artifacts_config = {}

@@ -10,7 +10,8 @@ def model_training_component(
         def inner_mlflow_wrapper(*args, **kwargs):
             base_component_ops = base_component(name, note)(run_func)
             if not framework:
-                mlflow.autolog(log_model_signatures=False, log_models=log_models)
+                mlflow.autolog(log_model_signatures=False,
+                               log_models=log_models)
             else:
                 assert framework in [
                     "sklearn",
@@ -28,7 +29,8 @@ def model_training_component(
                 import importlib
 
                 mlflow_module = importlib.import_module("mlflow." + framework)
-                mlflow_module.autolog(log_model_signatures=False, log_models=log_models)
+                mlflow_module.autolog(
+                    log_model_signatures=False, log_models=log_models)
             return base_component_ops(*args, **kwargs)
 
         return inner_mlflow_wrapper

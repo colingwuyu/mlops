@@ -111,17 +111,20 @@ def _transit_status_done():
     print(cur_status.transit())
 
 
-def _exec_init_run(pipeline: pipeline_module.Pipeline):
+def _exec_init_run(pipeline: pipeline_module.Pipeline, **kwargs):
     import redis
 
     r = redis.Redis.from_url(
         AIRFLOW__CELERY__BROKER_URL[:-1], db=DOCKER_COMPONENT_REDIS_DB
     )
     print(pipeline)
-    pipeline.mlflow_info.init_mlflow_run()
+    pipeline.init_mlflow_pipeline()
+    print(pipeline)
+    kwargs['ti'].xcom_push(
+        key='pipeline', value=yaml.dump(pipeline._serialize()))
 
-    r.hset("mlflow_runids", "pipeline_mlflow_runid", pipeline.run_id)
     r.set("pipeline", yaml.dump(pipeline._serialize()))
+    r.set("pipeline_run_id", pipeline.run_id)
 
 
 def _exec_end_run():
@@ -132,19 +135,11 @@ def _exec_end_run():
     )
 
     pipeline = pipeline_module.Pipeline.load(
-        yaml.load(r.get("pipeline").decode("utf-8"))
+        yaml.load(r.get("pipeline").decode("utf-8")),
+        r.get("pipeline_run_id").decode("utf-8")
     )
 
-    run_ids = r.hgetall("mlflow_runids")
-    for run_name, run_id in run_ids.items():
-        run_name = run_name.decode("utf-8")
-        run_id = run_id.decode("utf-8")
-        if run_name == "pipeline_mlflow_runid":
-            pipeline.mlflow_info.mlflow_run_id = run_id
-        else:
-            pipeline.operators[run_name].run_id = run_id
-
     print(pipeline)
-    pipeline.log_mlflow()
-    r.delete("mlflow_runids")
+    pipeline.end_mlflow_pipeline()
+    r.delete("pipeline_run_id")
     r.delete("pipeline")

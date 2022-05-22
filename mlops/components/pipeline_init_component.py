@@ -13,7 +13,8 @@ def pipeline_init_component(name: str = None, note: str = None):
                 mlflow_info.mlflow_tracking_uri, mlflow_info.mlflow_registry_uri
             )
             pipelinne_mlflow_run = mlflow.start_run(
-                experiment_id=MlflowUtils.get_exp_id(mlflow_info.mlflow_exp_id),
+                experiment_id=MlflowUtils.get_exp_id(
+                    mlflow_info.mlflow_exp_id),
                 run_name=mlflow_info.name,
             )
             mlflow_info.mlflow_run_id = pipelinne_mlflow_run.info.run_id

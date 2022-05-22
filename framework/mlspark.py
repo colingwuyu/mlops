@@ -1,13 +1,10 @@
+from framework.logger import logger
+from framework.config import Config as conf
+from pyspark.conf import SparkConf
+from pyspark.sql import SparkSession, SQLContext
 import findspark
 
 findspark.init()
-
-from pyspark.sql import SparkSession, SQLContext
-from pyspark.conf import SparkConf
-from framework.config import Config as conf
-from framework.logger import logger
-import os
-from pathlib import Path
 
 
 class MLSpark:

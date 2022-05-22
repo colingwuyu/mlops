@@ -26,15 +26,12 @@ from examples.iris.feature_transform import (
 from examples.iris.mlp_multiclassifier.model import MlpClassifierDataSet, MlpClassifier
 
 OPS_NAME = "mlp_multiclass"
-OPS_DES = """
-# MLP Multi-Classification
-"""
 
 ARTIFACT_MODEL = "mlops_model"
 ARTIFACT_TB = "tensorboard_log"
 
 
-@base_component(name=OPS_NAME, note=OPS_DES)
+@base_component
 def run_func(upstream_ids: dict, **kwargs):
     model_comps = {}
     num_hidden_layers = kwargs.get("num_hidden_layers", 1)
@@ -73,10 +70,12 @@ def run_func(upstream_ids: dict, **kwargs):
     train_dataset = MlpClassifierDataSet(
         model_comps[MODEL_COMP_SCHEMA], X_train, y_train
     )
-    test_dataset = MlpClassifierDataSet(model_comps[MODEL_COMP_SCHEMA], X_test, y_test)
+    test_dataset = MlpClassifierDataSet(
+        model_comps[MODEL_COMP_SCHEMA], X_test, y_test)
     num_features = X_train.shape[1]
     num_classes = len(train_dataset.classes_)
-    model = MlpClassifier(num_features, num_hidden_layers, num_nerons, num_classes)
+    model = MlpClassifier(num_features, num_hidden_layers,
+                          num_nerons, num_classes)
     model.train(
         train_dataset,
         test_dataset,

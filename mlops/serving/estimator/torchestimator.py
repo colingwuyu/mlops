@@ -48,7 +48,8 @@ class TorchModel(ABC):
     def load_model(self, model_path):
         state_dict: Dict = torch.load(model_path)
         model_cls = getattr(
-            import_module(state_dict.pop("model_module")), state_dict.pop("model_cls")
+            import_module(state_dict.pop("model_module")
+                          ), state_dict.pop("model_cls")
         )
         net_dict = state_dict.pop("net_dict")
         classes_ = state_dict.pop("classes_")

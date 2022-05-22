@@ -1,4 +1,3 @@
-from examples.iris.serving import model
 import pathlib
 
 from mlops.serving.estimator.skestimator import SkEstimator

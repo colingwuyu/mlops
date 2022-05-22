@@ -105,7 +105,8 @@ class AirflowCommStatus(Enum):
 
 def performance_eval(start_row, end_row):
     global model
-    print(f"Monitoring: performance evaluation examples {start_row} to {end_row}")
+    print(
+        f"Monitoring: performance evaluation examples {start_row} to {end_row}")
     eval_data = pd.read_csv(
         LABEL_DATA_FILE,
         skiprows=list(range(1, start_row))
@@ -181,7 +182,8 @@ if __name__ == "__main__":
         require_retrain = False
 
         for start_row, end_row in upload_data_counter.move():
-            print(f"Monitoring: data validation examples {start_row} to {end_row}")
+            print(
+                f"Monitoring: data validation examples {start_row} to {end_row}")
             upload_data = pd.read_csv(
                 UPLOAD_DATA_FILE,
                 skiprows=list(range(1, start_row))
@@ -195,7 +197,8 @@ if __name__ == "__main__":
                 prev_upload_data = pd.read_csv(
                     UPLOAD_DATA_FILE,
                     skiprows=list(range(1, prev_start_row))
-                    + list(range(prev_end_row + 1, upload_data_counter.file_lines + 1)),
+                    + list(range(prev_end_row + 1,
+                           upload_data_counter.file_lines + 1)),
                 )
             data_report_path = os.path.join(
                 DATA_REPORT_PATH, f"Evaluation examples {start_row}-{end_row}"

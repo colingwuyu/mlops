@@ -2,7 +2,6 @@ import tensorflow_data_validation as tfdv
 from IPython.display import Image, display
 
 from mlops.utils.mlflowutils import MlflowUtils
-
 from examples.iris.data_validation import (
     OPS_NAME,
     ARTIFACT_SCHEMA,
@@ -28,7 +27,8 @@ def display_schema(run_id: str):
 
 def get_trainset_stat(run_id: str):
     _assert_ops_type(run_id)
-    trainset_stat_txt = MlflowUtils.get_artifact_path(run_id, ARTIFACT_TRAINSET_STATS)
+    trainset_stat_txt = MlflowUtils.get_artifact_path(
+        run_id, ARTIFACT_TRAINSET_STATS)
     return tfdv.load_stats_text(trainset_stat_txt)
 
 

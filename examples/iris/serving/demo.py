@@ -1,4 +1,3 @@
-import os
 import random
 import json
 
@@ -35,7 +34,8 @@ def gen_data_drift(drift_mean=0.5, drift_std=0.2):
     inputs = train_data[FEATURES]
     index = random.sample(range(inputs.shape[0]), GEN_SIZE)
     inputs = inputs.iloc[index]
-    noises = np.random.normal(loc=drift_mean, scale=drift_std, size=inputs.shape)
+    noises = np.random.normal(
+        loc=drift_mean, scale=drift_std, size=inputs.shape)
     print(f"Mean value:\n{inputs.mean()}")
     print(f"STD value:\n{inputs.std()}")
     inputs = inputs + noises

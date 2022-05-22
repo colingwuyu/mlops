@@ -30,7 +30,8 @@ def download_tb(run_id):
     tb_save_path = os.path.join(TB_LOCAL_PATH, f"run_{run_id}")
     if not os.path.exists(tb_save_path):
         os.makedirs(tb_save_path)
-    MlflowUtils.download_artifact(run_id, ARTIFACT_TB, output_path=tb_save_path)
+    MlflowUtils.download_artifact(
+        run_id, ARTIFACT_TB, output_path=tb_save_path)
     return tb_save_path
 
 
