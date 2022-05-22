@@ -1,5 +1,12 @@
 # Demo Steps
 
+## Servers
+
+- mlflow: <http://localhost:5000/>
+- airflow: <http://localhost:8080/> (user-airflow; password-airflow)
+- notebook: <http://localhost:8888/> (password-notebook)
+- serving: <http://localhost:3000/>
+
 ## Preq
 
 1. no registered model in mlflow
