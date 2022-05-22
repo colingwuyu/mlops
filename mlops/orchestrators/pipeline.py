@@ -198,19 +198,20 @@ class Pipeline:
             experiment_id=exp_id, run_name=self.name)
         self.mlflow_info.mlflow_run_id = pipeline_run.info.run_id
         for component_name, component_spec in self.operators.items():
-            component_run = mlflow.start_run(
-                nested=True, experiment_id=exp_id, run_name=component_name)
-            component_spec.run_id = component_spec.args[consts.ARG_MLFLOW_RUN] = component_run.info.run_id
+            if component_spec.run_id is None:
+                component_run = mlflow.start_run(
+                    nested=True, experiment_id=exp_id, run_name=component_name)
+                component_spec.run_id = component_spec.args[consts.ARG_MLFLOW_RUN] = component_run.info.run_id
 
-            component_dict = component_spec._serialize()
-            for component_attr_name, component_attr_val in component_dict.items():
-                if component_attr_name != "args":
-                    mlflow.set_tag(
-                        f"component.{component_attr_name}", component_attr_val)
-                else:
-                    for arg_name, arg_val in component_attr_val.items():
-                        mlflow.log_param(arg_name, arg_val)
-            mlflow.end_run('SCHEDULED')
+                component_dict = component_spec._serialize()
+                for component_attr_name, component_attr_val in component_dict.items():
+                    if component_attr_name != "args":
+                        mlflow.set_tag(
+                            f"component.{component_attr_name}", component_attr_val)
+                    else:
+                        for arg_name, arg_val in component_attr_val.items():
+                            mlflow.log_param(arg_name, arg_val)
+                mlflow.end_run('SCHEDULED')
         mlflow.log_dict(
             self._serialize(), ARTIFACT_PIPELINE
         )

@@ -33,11 +33,9 @@ x-airflow-common:
 services:
   iris_serving:
     image: mlops-base:latest
-    # command: ["gunicorn", "--bind", "0.0.0.0:3000", "app:app"]
     command: ["python", "app.py"]
     working_dir: "/app/examples/iris/serving"
     volumes: 
-      # - ./examples/iris/serving:/app/examples/iris/serving
       - .:/app
       - mlflow_artifacts:/home/jovyan/mlflow_artifacts
     restart: always
@@ -62,7 +60,6 @@ services:
     command: ["python","-u", "monitoring.py"]
     working_dir: "/app/examples/iris/serving"
     volumes: 
-      # - ./examples/iris/serving:/app/examples/iris/serving
       - .:/app
       - mlflow_artifacts:/home/jovyan/mlflow_artifacts
     restart: always
@@ -116,22 +113,6 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
-    
-  # docker_registry:
-  #   image: registry:2.6.2
-  #   volumes:
-  #     - registry-data:/var/lib/registry
-  #   restart: always
-
-  # docker_registry_ui:
-  #   image: joxit/docker-registry-ui:static
-  #   ports:
-  #     - 8000:80
-  #   environment:
-  #     - REGISTRY_TITLE=My Private Docker Registry
-  #     - REGISTRY_URL=http://docker_registry:5000
-  #   depends_on:
-  #     - docker_registry
 
   redis:
     image: redis:latest
