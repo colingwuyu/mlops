@@ -3,6 +3,8 @@ import shutil
 
 import mlflow.tracking
 
+curdir = os.path.dirname(os.path.abspath(__file__))
+
 try:
     client = mlflow.tracking.MlflowClient(
         "http://localhost:5000", "http://localhost:5000"
@@ -11,11 +13,11 @@ try:
 except:
     ...
 
-label_data = "static/data/label_data/data.csv"
-eval_counter = "static/data/label_data/perf_eval_counter"
-upload_data = "static/data/upload_data/data.csv"
-upload_counter = "static/data/upload_data/data_val_counter"
-raw_data = "static/data/raw_data.csv"
+label_data = f"{curdir}/static/data/label_data/data.csv"
+eval_counter = f"{curdir}/static/data/label_data/perf_eval_counter"
+upload_data = f"{curdir}/static/data/upload_data/data.csv"
+upload_counter = f"{curdir}s/tatic/data/upload_data/data_val_counter"
+raw_data = f"{curdir}/static/data/raw_data.csv"
 if os.path.exists(label_data):
     os.remove(label_data)
     shutil.copyfile(raw_data, label_data)
@@ -28,10 +30,10 @@ if os.path.exists(eval_counter):
 if os.path.exists(upload_counter):
     os.remove(upload_counter)
 
-eval_result_folder = "static/performance_reports"
-perf_report_folder = "templates/performance_reports"
-data_report_folder = "templates/data_reports"
-airflow_comm_folder = "static/data/airflow_comm"
+eval_result_folder = f"{curdir}/static/performance_reports"
+perf_report_folder = f"{curdir}/templates/performance_reports"
+data_report_folder = f"{curdir}/templates/data_reports"
+airflow_comm_folder = f"{curdir}/static/data/airflow_comm"
 shutil.rmtree(eval_result_folder)
 shutil.rmtree(perf_report_folder)
 shutil.rmtree(data_report_folder)

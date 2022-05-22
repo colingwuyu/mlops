@@ -1,0 +1,66 @@
+name: "IRIS Training Pipeline"
+uri: /app/examples/iris
+components:
+    data_gen:
+        pipeline_init: True
+        module_file: data_gen/__init__.py
+        args:
+            url: "http://iris_serving:3000/data"
+            x_headers:
+                - sepal-length
+                - sepal-width
+                - petal-length
+                - petal-width
+            y_header: species
+            test_size: 0.2
+    data_validation:
+        module_file: data_validation/__init__.py
+        upstreams: 
+            - data_gen
+    feature_transform:
+        module_file: feature_transform/__init__.py
+        args:
+            transform_approach: min-max
+        upstreams:
+            - data_gen
+    logistic_regression:
+        module_file: logistic_regression/__init__.py
+        upstreams:
+            - data_gen
+            - data_validation
+            - feature_transform
+    linear_discriminant_analysis:
+        module_file: linear_discriminant_analysis/__init__.py
+        upstreams:
+            - data_gen
+            - data_validation
+            - feature_transform
+    mlp_multiclassifier:
+        module_file: mlp_multiclassifier/__init__.py
+        upstreams:
+            - data_gen
+            - data_validation
+            - feature_transform
+        args:
+            num_neurons: 10
+            learning_rate: 0.1
+            epochs: 100
+    model_eval:
+        module_file: model_eval/__init__.py
+        upstreams:
+            - data_gen
+            - logistic_regression
+            - linear_discriminant_analysis
+            - mlp_multiclassifier
+    model_pub:
+        pipeline_end: True
+        module_file: model_pub/__init__.py
+        args:
+            model_registry_name: IRIS
+        upstreams:
+            - data_gen
+            - model_eval
+mlflow:
+    exp_id: "Default"
+    tracking_uri: http://mlflow_server:5000
+    registry_uri: http://mlflow_server:5000

@@ -1,0 +1,1 @@
+python examples/iris/serving/clean_space.py
